@@ -1,0 +1,16 @@
+{
+  "extends":"airbnb",
+  "env": {
+    "browser": true,
+    "es6": true,
+    "commonjs": true,
+    "mocha": true,
+  },
+  "rules": {
+    "no-restricted-syntax": 0,
+    "no-plusplus":0,
+    "no-console": 0,
+    "import/no-extraneous-dependencies": ["error", {"devDependencies": ["**/*.test.js", "**/*.spec.js"]}]
+  }
+
+}

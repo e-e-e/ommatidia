@@ -1,0 +1,113 @@
+---
+(by personality):
+  Notes: |
+    Personality, the most specific or focal subject.
+    This facet is denoted by a comma (,).
+  NT:
+(by matter):
+  Notes: |
+    Matter or property, the substance, properties or materials of the subject.
+    This facet is denoted by a semicolon (;).
+  NT:
+    - T: Drawing
+    - T: Painting
+    - T: Digital Video
+    - T: Code
+      NT:
+        - T: (by programming language)
+          NT:  
+            - T: C++
+            - T: Javascript
+            - T: Python
+        - T: (by framework)
+          NT:
+            - T: NodeJS
+              RT:
+                - T: Javascript
+            - T: Cinder
+              RT:
+                - T: C++
+            - T: NLTK
+
+(by energy) :
+  Notes: |
+    Energy, including the processes, operations and activities.
+    This facet is denoted by a colon (:).
+  NT:
+    - T: (by type)
+      NT:
+        - T: Exhibition
+        - T: Performance
+        - T: Reading
+        - T: Lecture
+        - T: Residency
+        - T: Conference
+        - T: Festival
+        - T: Online
+
+(by time):
+  Notes: |
+    Time, which refers to the dates or seasons of the subject.
+    This facet is denoted by an apostrophe (').
+  NT:
+    - T: (by duration)
+
+(by space):
+  Notes: |
+    Space, which relates to the geographic location of the subject.
+    This facet is denoted by a period (.).
+  NT:
+    - T: (by institution)
+      NT:
+        - T: Artist-Run-Initative
+          NT:
+            - T: Firstdraft
+            - T: Success
+            - T: The Walls
+        - T: Contemporary Art Space
+          NT:
+            - T: Perth Institute of Contemporary Art
+            - T: Canberra Contemporary Artspace
+            - T: Australia Centre for Contemporary Art
+            - T: Queensland Centre for Photography
+        - T: Museum
+          NT:
+            - T: Museum of Contemporary Art Australia
+        - T: Other 
+          NT:
+            - T: Performance Space
+            - T: Fremantle Arts Centre
+
+    - T: (by geographic area)
+      NT:
+        - T: Australia
+          NT:
+            - T: ACT
+              NT:
+                - T: Canberra 
+            - T: NSW
+              NT:
+                - T: Sydney
+            - T: VIC
+              NT:
+                - T: Melbourne
+            - T: QLD
+              NT:
+                - T: Brisbane
+                - T: Gold Coast
+            - T: WA
+              NT:
+                - T: Perth
+                - T: Fremantle
+        - T: Finland
+          NT:
+            - T: Helsinki
+        - T: Spain
+          NT:
+            - T: Madrid
+        - T: Netherlands
+          NT:
+            - T: Amsterdam
+        - T: USA
+          NT:
+            - T: Cranbrook
