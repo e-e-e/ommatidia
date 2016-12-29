@@ -87,16 +87,15 @@ async function getFolderContents(dir) {
 }
 
 function filesToInclude(omData, otherFiles) {
-  let files;
   if (typeof omData.include === 'string') {
     // console.log('include as a sting', omData.include);
     const patternFilter = minimatch.filter(omData.include);
-    files = otherFiles
+    return otherFiles
       .filter(patternFilter)
       .reduce(reduceFileArrayToMetadataDictionary(), {});
   } else if (Array.isArray(omData.include)) {
     // console.log('include as an array', omData.include);
-    files = omData.include.reduce((mappedFiles, include) => {
+    return omData.include.reduce((mappedFiles, include) => {
       const metadata = (typeof include === 'string') ? {} : include.meta;
       const pattern = minimatch.filter((typeof include === 'string') ? include : include.file);
       return otherFiles
@@ -104,30 +103,16 @@ function filesToInclude(omData, otherFiles) {
         .reduce(reduceFileArrayToMetadataDictionary(metadata), mappedFiles);
     }, {});
   }
-  return files;
+  return null;
 }
 
-async function crawlDirectory(dir, parentId) {
-  console.log(chalk.bold('Crawling:'), dir);
-  const { folders, omFiles, notOmFiles, baseOm } = await getFolderContents(dir);
-  let baseOmId = parentId;
-  let sourceFileId;
-  let include;
-
-  if (baseOm) {
-    const baseOmFilepath = path.join(dir, baseOm);
-    const omData = loadOmmatidiaFile(baseOmFilepath);
-    sourceFileId = await trackedFiles.add(baseOmFilepath);
-    baseOmId = await ommatidia.add(omData, sourceFileId, parentId);
-    include = filesToInclude(omData, notOmFiles);
-  }
-
-  await Promise.each(omFiles, async ({ omFile, relatedFile }) => {
+const processOmFile = (dir, baseOmId, include, sourceFileId) =>
+  async ({ omFile, relatedFile }) => {
     let parent = baseOmId;
     const omFilepath = path.join(dir, omFile);
     const specificOmData = loadOmmatidiaFile(omFilepath);
-    if (baseOm) {
-      const otherMetadata = include && include[relatedFile];
+    if (include) {
+      const otherMetadata = include[relatedFile];
       if (otherMetadata && !_.isEmpty(otherMetadata)) {
         parent = await ommatidia.add(otherMetadata, sourceFileId, baseOmId);
       }
@@ -135,23 +120,43 @@ async function crawlDirectory(dir, parentId) {
     const omSourceFileId = await trackedFiles.add(omFilepath);
     const omId = await ommatidia.add(specificOmData, omSourceFileId, parent);
     return ommatidiaFiles.add(path.join(dir, relatedFile), omId);
-  });
+  };
 
-  if (include) {
-    const filesStillToInclude = _.omit(include, omFiles.map(om => om.relatedFile));
-    for (const file in filesStillToInclude) {
-      if (Object.prototype.hasOwnProperty.call(filesStillToInclude, file)) {
-        const filepath = path.join(dir, file);
-        const metadata = filesStillToInclude[file];
-        let metaId = baseOmId;
-        if (!_.isEmpty(metadata)) {
-          metaId = await ommatidia.add(metadata, sourceFileId, baseOmId);
-        }
-        await ommatidiaFiles.add(filepath, metaId);
-      }
+const processInclude = (baseOmId, sourceFileId) =>
+  async ({ filepath, metadata }) => {
+    let metaId = baseOmId;
+    if (!_.isEmpty(metadata)) {
+      metaId = await ommatidia.add(metadata, sourceFileId, baseOmId);
     }
+    await ommatidiaFiles.add(filepath, metaId);
+  };
+
+async function crawlDirectory(dir, parentId) {
+  console.log(chalk.bold('Crawling:'), dir);
+  const { folders, omFiles, notOmFiles, baseOm } = await getFolderContents(dir);
+  let baseOmId = parentId;
+
+  if (baseOm) {
+    const baseOmFilepath = path.join(dir, baseOm);
+    const omData = loadOmmatidiaFile(baseOmFilepath);
+    const include = filesToInclude(omData, notOmFiles);
+
+    const sourceFileId = await trackedFiles.add(baseOmFilepath);
+    baseOmId = await ommatidia.add(omData, sourceFileId, parentId);
+
+    await Promise.each(omFiles, processOmFile(dir, baseOmId, include, sourceFileId));
+
+    if (include) {
+      let filesStillToInclude = _.omit(include, omFiles.map(om => om.relatedFile));
+      filesStillToInclude = _.map(filesStillToInclude,
+        (v, k) => ({ filepath: path.join(dir, k), metadata: v }));
+      await Promise.each(filesStillToInclude, processInclude(baseOmId, sourceFileId));
+    }
+  } else {
+    // just process omFiles
+    await Promise.each(omFiles, processOmFile(dir, baseOmId));
   }
-  // add remaining files
+  // recursively crawl directories
   return Promise.mapSeries(folders, folder => crawlDirectory(path.join(dir, folder), baseOmId));
 }
 
