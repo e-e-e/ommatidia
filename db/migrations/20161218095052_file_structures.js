@@ -33,8 +33,9 @@ exports.up = (knex, Promise) => (
         table.increments('om_id');
         table.integer('source_file_id').unsigned().notNullable();
         table.integer('parent').unsigned();
-        table.json('metadata');
+        table.text('title');
         table.text('description');
+        table.json('metadata');
         table.foreign('source_file_id').references('tracked_files.tracked_id')
              .onUpdate('CASCADE')
              .onDelete('CASCADE');
@@ -45,7 +46,7 @@ exports.up = (knex, Promise) => (
 
       knex.schema.createTable('files', (table) => {
         table.increments('file_id');
-        table.integer('related_om').unsigned().notNullable();
+        table.integer('related_om').unsigned();
         table.string('name').notNullable();
         table.text('path').notNullable();
         table.string('original_name').notNullable();
@@ -59,7 +60,8 @@ exports.up = (knex, Promise) => (
       }),
     ]))
     .then(() => knex.schema.raw('CREATE TRIGGER sync_lastmod BEFORE UPDATE ON files FOR EACH ROW EXECUTE PROCEDURE sync_lastmod();'))
-    .then(() => knex.schema.raw('CREATE TRIGGER replace_parent_with_parent BEFORE DELETE ON ommatidia FOR EACH ROW EXECUTE PROCEDURE replace_parent_with_parent();'))
+    .then(() => knex.schema.raw('CREATE TRIGGER sync_lastmod BEFORE UPDATE ON tracked_files FOR EACH ROW EXECUTE PROCEDURE sync_lastmod();'))
+    .then(() => knex.schema.raw('CREATE TRIGGER replace_parent_with_parent AFTER DELETE ON ommatidia FOR EACH ROW EXECUTE PROCEDURE replace_parent_with_parent();'))
 );
 
 exports.down = knex => (

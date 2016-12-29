@@ -2,9 +2,14 @@
 import {} from 'dotenv/config';
 import fs from 'fs';
 import path from 'path';
+
 import Promise from 'bluebird';
 import yaml from 'js-yaml';
 import minimatch from 'minimatch';
+import chalk from 'chalk';
+import _ from 'lodash';
+
+import { ommatidia, trackedFiles, ommatidiaFiles } from './db/models/ommatidia';
 
 const readdir = Promise.promisify(fs.readdir);
 const stat = Promise.promisify(fs.stat);
@@ -31,24 +36,24 @@ function loadOmmatidiaFile(filename) {
   const meta = (results[2]) ? yaml.safeLoad(results[2]) : {};
   let description = results[3];
   if (typeof description === 'string') description = description.trim();
-  return { ...meta, description };
+  return { include: meta.include, meta, description };
 }
 
-const getEmptyKindStructure = () => ({ folders: [], omFiles: [], notOmFiles: [], baseOm: '' });
+const defaultKindStructure = () => ({ folders: [], omFiles: [], notOmFiles: [], baseOm: '' });
 
-const sortFilesIntoKind = dir => ({ folders, omFiles, notOmFiles, baseOm }, file, index, files) => {
+const sortFilesIntoKind = ({ folders, omFiles, notOmFiles, baseOm }, file, index, files) => {
   if (file.stat.isDirectory()) {
-    folders.push(path.join(dir, file.name));
+    folders.push(file.name);
   } else if (file.stat.isFile() && isOmmatidiaFile(file.name)) {
     if (isBaseOmmatidiaFile(file.name)) {
-      baseOm = path.join(dir, file.name);
+      baseOm = file.name; // eslint-disable-line
     } else {
       const relatedFile = relatedOmmatidiaFile(file.name);
       if (files.find(f => f.name === relatedFile)) {
-        omFiles.push({ relatedFile, omFile: path.join(dir, file.name) });
+        omFiles.push({ relatedFile, omFile: file.name });
       } else {
-        console.warn('.om file does not match any file in directory:');
-        console.warn(path.join(dir, file.name));
+        console.log(chalk.orange('.om file does not match any file in directory:'));
+        console.log(file.name);
       }
     }
   } else if (file.stat.isFile()) {
@@ -57,78 +62,107 @@ const sortFilesIntoKind = dir => ({ folders, omFiles, notOmFiles, baseOm }, file
   return { folders, omFiles, notOmFiles, baseOm };
 };
 
-function crawlDirectory(dir) {
-  console.log('\n', '\n', 'crawl:', dir, '\n', '\n');
-  return readdir(dir)
-    .map(file => stat(path.join(dir, file)).then(s => ({ name: file, stat: s })))
-    .then(files => files.reduce(sortFilesIntoKind(dir), getEmptyKindStructure()))
-    .then(({ folders, omFiles, notOmFiles, baseOm }) => {
-      // const folders = [];
-      // const omFiles = [];
-      // const notOmFiles = [];
-      // let baseOm;
+const reduceFileArrayToMetadataDictionary = metadata => (mapped, file) => {
+  const meta = metadata || {};
+  if (mapped[file]) {
+    mapped[file] = { ...mapped[file], ...meta };
+  } else {
+    mapped[file] = meta;
+  }
+  return mapped;
+};
 
-      // files.forEach((file) => {
-      //   if (file.stat.isDirectory()) {
-      //     folders.push(path.join(dir, file.name));
-      //   } else if (file.stat.isFile() && isOmmatidiaFile(file.name)) {
-      //     if (isBaseOmmatidiaFile(file.name)) {
-      //       baseOm = path.join(dir, file.name);
-      //     } else {
-      //       const relatedFile = relatedOmmatidiaFile(file.name);
-      //       if (files.find(f => f.name === relatedFile)) {
-      //         omFiles.push({ relatedFile, omFile: path.join(dir, file.name) });
-      //       } else {
-      //         console.warn('.om file does not match any file in directory:');
-      //         console.warn(path.join(dir, file.name));
-      //       }
-      //     }
-      //   } else if (file.stat.isFile()) {
-      //     notOmFiles.push(file.name);
-      //   }
-      // });
-      console.log('load base om');
-      const omData = (baseOm) ? loadOmmatidiaFile(baseOm) : {};
-
-      console.log('This is where we would add main meta data :');
-      console.log(omData);
-      console.log('lets say it has an id of 2.');
-      // add metadata to database -> get id.
-      let filesToInclude;
-      if (typeof omData.include === 'string') {
-        console.log('include as a sting', omData.include);
-        const patternFilter = minimatch.filter(omData.include);
-        filesToInclude = notOmFiles.filter(patternFilter);
-      } else if (Array.isArray(omData.include)) {
-        console.log('include as an array', omData.include);
-        filesToInclude = omData.include.reduce((mappedFiles, data) => {
-          const pattern = (typeof data === 'string') ? data : data.file;
-          const matchedFiles = notOmFiles.filter(minimatch.filter(pattern));
-          return matchedFiles.reduce((mapped, file) => {
-            const meta = data.meta ? data.meta : {};
-            if (mapped[file]) mapped[file] = { ...mapped[file], ...meta };
-            else mapped[file] = meta;
-            return mapped;
-          }, mappedFiles);
-        }, {});
-      }
-      console.log(filesToInclude);
-      // process remaining om files
-      console.log('process oms', omFiles);
-      omFiles.forEach((pair) => {
-        console.log('pair', pair);
-        const omData = loadOmmatidiaFile(pair.omFile);
-        console.log('this is where we would add the metadata of the file:');
-        console.log(pair.relatedFile, pair.omFile);
-        console.log('data:');
-        console.log(omData);
-      });
-      // crawl directories, passing down data from *.om file.
-      return Promise.mapSeries(folders, folder => crawlDirectory(path.join(src, folder)));
-    });
+async function getFolderContents(dir) {
+  try {
+    let files = await readdir(dir);
+    files = await Promise.map(files, file => (
+      stat(path.join(dir, file))
+      .then(s => ({ name: file, stat: s }))
+    ));
+    return files.reduce(sortFilesIntoKind, defaultKindStructure());
+  } catch (e) {
+    console.error(e);
+    return null;
+  }
 }
 
-crawlDirectory(src);
+function filesToInclude(omData, otherFiles) {
+  let files;
+  if (typeof omData.include === 'string') {
+    // console.log('include as a sting', omData.include);
+    const patternFilter = minimatch.filter(omData.include);
+    files = otherFiles
+      .filter(patternFilter)
+      .reduce(reduceFileArrayToMetadataDictionary(), {});
+  } else if (Array.isArray(omData.include)) {
+    // console.log('include as an array', omData.include);
+    files = omData.include.reduce((mappedFiles, include) => {
+      const metadata = (typeof include === 'string') ? {} : include.meta;
+      const pattern = minimatch.filter((typeof include === 'string') ? include : include.file);
+      return otherFiles
+        .filter(pattern)
+        .reduce(reduceFileArrayToMetadataDictionary(metadata), mappedFiles);
+    }, {});
+  }
+  return files;
+}
+
+async function crawlDirectory(dir, parentId) {
+  console.log(chalk.bold('Crawling:'), dir);
+  const { folders, omFiles, notOmFiles, baseOm } = await getFolderContents(dir);
+  let baseOmId = parentId;
+  let sourceFileId;
+  let include;
+
+  if (baseOm) {
+    const baseOmFilepath = path.join(dir, baseOm);
+    const omData = loadOmmatidiaFile(baseOmFilepath);
+    sourceFileId = await trackedFiles.add(baseOmFilepath);
+    baseOmId = await ommatidia.add(omData, sourceFileId, parentId);
+    include = filesToInclude(omData, notOmFiles);
+  }
+
+  await Promise.each(omFiles, async ({ omFile, relatedFile }) => {
+    let parent = baseOmId;
+    const omFilepath = path.join(dir, omFile);
+    const specificOmData = loadOmmatidiaFile(omFilepath);
+    if (baseOm) {
+      const otherMetadata = include && include[relatedFile];
+      if (otherMetadata && !_.isEmpty(otherMetadata)) {
+        parent = await ommatidia.add(otherMetadata, sourceFileId, baseOmId);
+      }
+    }
+    const omSourceFileId = await trackedFiles.add(omFilepath);
+    const omId = await ommatidia.add(specificOmData, omSourceFileId, parent);
+    return ommatidiaFiles.add(path.join(dir, relatedFile), omId);
+  });
+
+  if (include) {
+    const filesStillToInclude = _.omit(include, omFiles.map(om => om.relatedFile));
+    for (const file in filesStillToInclude) {
+      if (Object.prototype.hasOwnProperty.call(filesStillToInclude, file)) {
+        const filepath = path.join(dir, file);
+        const metadata = filesStillToInclude[file];
+        let metaId = baseOmId;
+        if (!_.isEmpty(metadata)) {
+          metaId = await ommatidia.add(metadata, sourceFileId, baseOmId);
+        }
+        await ommatidiaFiles.add(filepath, metaId);
+      }
+    }
+  }
+  // add remaining files
+  return Promise.mapSeries(folders, folder => crawlDirectory(path.join(dir, folder), baseOmId));
+}
+
+async function begin() {
+  await crawlDirectory(src);
+  console.log('done');
+  return null;
+}
+
+begin().then(() => process.exit());
+// processDirectory(src);
 // .then(() => crawlDirectory(path.join(src, 'alibrary')))
 // .then(() => crawlDirectory(path.join(src, 'Success/26 ideal erasures')))
 // .then(() => crawlDirectory(path.join(src, 'Success/Success2016')));

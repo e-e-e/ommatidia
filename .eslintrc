@@ -7,6 +7,7 @@
     "mocha": true,
   },
   "rules": {
+    "no-param-reassign": ["error", { "props": false }],
     "no-restricted-syntax": 0,
     "no-plusplus":0,
     "no-console": 0,
