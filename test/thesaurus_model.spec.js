@@ -1,7 +1,7 @@
 import chai from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 
-import { getAllTerms } from '../db/models/thesaurus';
+import { getAllTerms } from '../lib/db/models/thesaurus';
 
 chai.use(chaiAsPromised);
 chai.should();

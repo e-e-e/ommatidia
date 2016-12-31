@@ -3,8 +3,8 @@ import chaiAsPromised from 'chai-as-promised';
 
 import crypto from 'crypto';
 
-import knex from '../db/knex';
-import { trackedFiles, ommatidia } from '../db/models/ommatidia';
+import knex from '../lib/db/knex';
+import { trackedFiles, ommatidia } from '../lib/db/models/ommatidia';
 
 chai.use(chaiAsPromised);
 chai.should();

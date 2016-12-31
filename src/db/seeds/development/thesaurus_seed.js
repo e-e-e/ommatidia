@@ -1,4 +1,5 @@
 const fs = require('fs');
+const path = require('path');
 const yaml = require('js-yaml');
 
 exports.seed = function seed(knex, Promise) {
@@ -67,7 +68,7 @@ exports.seed = function seed(knex, Promise) {
     return Promise.each(Object.keys(doc), facet => addRelations(doc[facet]));
   }
 
-  const thesaurus = yaml.safeLoad(fs.readFileSync('./db/thesaurus.yml', 'utf8'));
+  const thesaurus = yaml.safeLoad(fs.readFileSync(path.join(__dirname, '../../thesaurus.yml'), 'utf8'));
   // Deletes ALL existing entries
   return knex('terms').del()
     .then(() => processTerms(thesaurus))

@@ -1,7 +1,7 @@
 import path from 'path';
 import chalk from 'chalk';
 import knex from '../knex';
-import { hashFile } from '../../lib/utils';
+import { hashFile } from '../../utils';
 
 
 const TrackedFiles = () => knex('tracked_files');
