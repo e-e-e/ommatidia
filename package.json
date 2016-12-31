@@ -7,6 +7,9 @@
     "start": "babel-node index.js",
     "test": "NODE_ENV=test && mocha --compilers js:babel-register"
   },
+  "bin": {
+    "ommatidia": "./bin/index.js"
+  },
   "author": "",
   "license": "ISC",
   "private": true,
@@ -19,8 +22,10 @@
     "express": "^4.14.0",
     "js-yaml": "^3.7.0",
     "knex": "^0.12.6",
+    "liftoff": "^2.3.0",
     "lodash": "^4.17.3",
     "minimatch": "^3.0.3",
+    "minimist": "^1.2.0",
     "pg": "^6.1.0"
   },
   "devDependencies": {
