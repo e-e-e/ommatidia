@@ -1,10 +1,13 @@
 #!/usr/bin/env node
 
+const Promise = require('bluebird');
 const Liftoff = require('liftoff');
 const chalk = require('chalk');
 const commander = require('commander');
 const argv = require('minimist')(process.argv.slice(2));
 const cliPkg = require('../package');
+const Ommatidia = require('../index.js').default;
+
 
 function exit(text) {
   if (text instanceof Error) {
@@ -27,7 +30,7 @@ function initOmmatidia(env) {
   }
   const config = require(env.configPath); // eslint-disable-line
   console.log(config);
-  return {};
+  return Ommatidia(config);
 }
 
 function invoke(env) {
@@ -44,7 +47,7 @@ function invoke(env) {
     console.log('CLI PACKAGE.JSON', require('../package')); // eslint-disable-line
   }
 
-  const pending = null;
+  let pending = null;
 
   commander.version(chalk.blue(`Ommatidia CLI version: ${chalk.green(cliPkg.version)}\n`));
 
@@ -89,16 +92,13 @@ function invoke(env) {
   commander.command('make <files...>')
     .description('Create new empty *.<fn>.om files for specified files.')
     .action((files) => {
-      files.forEach((file) => {
-        // check if file and not directory
-        console.log('make *.%s.om', file);
-      });
+      pending = Promise.each(files, filename => Ommatidia.makeOmFile(filename));
     });
 
   commander.command('make:base')
     .description('Create new empty *.om file.')
     .action(() => {
-      console.log('make *.om file');
+      pending = Ommatidia.makeOmFile();
     });
 
   commander.parse(process.argv);

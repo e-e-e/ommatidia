@@ -3,6 +3,17 @@ import crypto from 'crypto';
 
 import Promise from 'bluebird';
 
+export const isOmmatidiaFile = filename => /^\*.*\.om$/.test(filename);
+
+export const isBaseOmmatidiaFile = filename => (isOmmatidiaFile(filename) && filename.length === 4);
+
+export const relatedOmmatidiaFile = (filename) => {
+  const match = filename.match(/^\*(.*)\.om$/);
+  return (match && match.length > 1) ? match[1] : null;
+};
+
+export const generateOmFilename = filename => `*.${filename}.om`;
+
 export function hashFile(file) {
   const promise = new Promise((resolve, reject) => {
     const hash = crypto.createHash('md5');
