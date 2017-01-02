@@ -7,7 +7,7 @@
     "prepublish": "npm run babel",
     "build": "npm run babel",
     "babel": "rm -rf ./lib && babel src --out-dir lib --copy-files",
-    "dev": "rm -rf ./lib && babel -w src --out-dir lib --copy-files",
+    "dev": "rm -rf ./lib && babel --source-maps -w src --out-dir lib --copy-files",
     "start": "babel-node src/index.js",
     "lint": "eslint src/**",
     "test": "NODE_ENV=test && mocha --compilers js:babel-register"
