@@ -92,16 +92,19 @@ function invoke(env) {
   commander.command('make <files...>')
     .description('Create new empty *.<fn>.om files for specified files.')
     .action((files) => {
-      pending = Promise.each(files, filename => Ommatidia.makeOmFile(filename));
+      pending = Promise.each(files, filename => Ommatidia.makeOmFile(filename)).catch(exit);
     });
 
   commander.command('make:base')
     .description('Create new empty *.om file.')
     .action(() => {
-      pending = Ommatidia.makeOmFile();
+      pending = Ommatidia.makeOmFile().catch(exit);
     });
 
   commander.parse(process.argv);
+
+  Promise.resolve(pending)
+    .then(() => commander.help());
 }
 
 const cli = new Liftoff({
