@@ -5,20 +5,20 @@ module.exports = {
     client: 'pg',
     connection: 'postgres://localhost/ommatidia_test',
     migrations: {
-      directory: path.join(__dirname, '/src/db/migrations'),
+      directory: path.join(__dirname, '/lib/db/migrations'),
     },
     seeds: {
-      directory: path.join(__dirname, '/src/db/seeds/test'),
+      directory: path.join(__dirname, '/lib/db/seeds/test'),
     },
   },
   development: {
     client: 'pg',
     connection: 'postgres://localhost/ommatidia',
     migrations: {
-      directory: path.join(__dirname, '/src/db/migrations'),
+      directory: path.join(__dirname, '/lib/db/migrations'),
     },
     seeds: {
-      directory: path.join(__dirname, '/src/db/seeds/development'),
+      directory: path.join(__dirname, '/lib/db/seeds/development'),
     },
   },
   production: {
