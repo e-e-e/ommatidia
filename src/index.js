@@ -5,6 +5,8 @@ import Promise from 'bluebird';
 import { template } from 'lodash';
 import chalk from 'chalk';
 
+import Knex from 'knex';
+import Thesaurus from './db/models/thesaurus';
 import { generateOmFilename, isOmmatidiaFile } from './utils';
 
 const fsStat = Promise.promisify(fs.stat);
@@ -14,6 +16,20 @@ const fsWriteFile = Promise.promisify(fs.writeFile);
 export default class Ommatidia {
   constructor(config) {
     console.log(config);
+    // establishdata base connection here using
+    this.knex = Knex({
+      client: 'pg',
+      connection: config.database || 'postgres://localhost/ommatidia',
+      migrations: {
+        directory: path.join(__dirname, './db/migrations'),
+      },
+      seeds: {
+        directory: path.join(__dirname, './db/seeds/development'),
+      },
+    });
+    // should test to see if one exists before trying to load it.
+    this.thesaurusFile = config.thesaurus;
+    this.thesaurus = new Thesaurus(this.knex);
   }
 
   static makeOmFile = (file) => {
@@ -51,6 +67,13 @@ export default class Ommatidia {
         console.log(`Making new om file ${newOmFile}, with default title: ${chalk.green(title)}.`);
         return fsWriteFile(newOmFile, data, { flag: 'wx' });
       });
+  }
+
+  initialiseDatabase() {
+    const filename = path.join(process.cwd(), this.thesaurusFile);
+    return this.knex.migrate.rollback()
+      .then(() => this.knex.migrate.latest())
+      .then(() => this.thesaurus.build(filename));
   }
 
 }
