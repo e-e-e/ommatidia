@@ -7,7 +7,7 @@ exports.up = (knex, Promise) => (
       table.integer('bt').unsigned();
       table.boolean('facet').notNullable().defaultTo('false');
       table.string('notes');
-
+      table.integer('ordinal').unsigned();
       table.foreign('bt').references('terms.term_id')
            .onUpdate('CASCADE')
            .onDelete('CASCADE');
