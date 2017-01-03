@@ -57,7 +57,9 @@ function invoke(env) {
     .option('-v, --verbose')
     .action((options) => {
       console.log('STATUS');
-      const ommatidia = initOmmatidia(env);
+      pending = initOmmatidia(env).status()
+        .then(() => success())
+        .catch(exit);
     });
 
   commander.command('init')
