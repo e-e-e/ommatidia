@@ -66,7 +66,9 @@ function invoke(env) {
     .option('-f, --force', 'Force rebuild of database tables.')
     .action((options) => {
       console.log('INIT');
-      const ommatidia = initOmmatidia(env);
+      pending = initOmmatidia(env).initialiseDatabase()
+        .then(() => success('Successfully Initialised Database!'))
+        .catch(exit);
     });
 
   commander.command('build')
