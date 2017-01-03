@@ -18,7 +18,6 @@ function exit(text) {
   process.exit(1);
 }
 
-
 function success(text) {
   console.log(text);
   process.exit(0);
@@ -27,10 +26,11 @@ function success(text) {
 function initOmmatidia(env) {
   if (!env.configPath) {
     exit('No ommatidia config file found in this directory. Specify a path with --omfile');
+  } else if (process.cwd() !== env.configBase) {
+    process.chdir(env.configPath);
   }
   const config = require(env.configPath); // eslint-disable-line
-  console.log(config);
-  return Ommatidia(config);
+  return new Ommatidia(config);
 }
 
 function invoke(env) {
