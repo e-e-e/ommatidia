@@ -69,6 +69,16 @@ export default class Ommatidia {
       });
   }
 
+  status() {
+    // what stats do we want to present.
+    // is database initialised?
+    // How many files are tracked
+    // how many terms in the theasurus
+    // where is the base directory.
+    //
+    return this.thesaurus.count().then(count => console.log('term count:', count));
+  }
+
   initialiseDatabase() {
     const filename = path.join(process.cwd(), this.thesaurusFile);
     return this.knex.migrate.rollback()
