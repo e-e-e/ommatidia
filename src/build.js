@@ -1,4 +1,3 @@
-#!/usr/bin/env node
 import {} from 'dotenv/config';
 import fs from 'fs';
 import path from 'path';
