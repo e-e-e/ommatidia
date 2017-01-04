@@ -7,9 +7,36 @@ const isFacet = name => /\(.+\)/.test(name);
 
 export default class Thesaurus {
   constructor(knex) {
+    this.knex = knex;
     this.Terms = () => knex('terms');
     this.RelatedTerms = () => knex('related_terms');
     this.NarrowerTerms = () => knex('narrower_terms');
+  }
+
+  viewExists() {
+    return this.knex.raw('select count(*) from pg_class where relname=\'terms_with_roots\' and relkind=\'m\'');
+  }
+
+  createView() {
+    return this.knex.raw(`
+      CREATE MATERIALIZED VIEW IF NOT EXISTS terms_with_roots 
+      AS
+        WITH RECURSIVE root_parent AS (
+          SELECT t.term_id, t.term, t.facet, t.bt, t.term_id::INT AS root, 1::INT AS depth 
+          FROM terms AS t 
+          WHERE t.bt IS NULL
+        UNION ALL
+          SELECT t.term_id, t.term, t.facet, t.bt, p.root, p.depth + 1 AS depth 
+          FROM root_parent AS p, terms AS t 
+          WHERE t.bt = p.term_id
+        )
+        SELECT * FROM root_parent AS n ORDER BY n.term_id ASC
+      WITH NO DATA;
+    `);
+  }
+
+  refreshView() {
+    return this.knex.raw('REFRESH MATERIALIZED VIEW terms_with_roots WITH DATA');
   }
 
   count(includeFacets = false) {
