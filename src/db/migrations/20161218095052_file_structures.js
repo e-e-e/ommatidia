@@ -1,3 +1,13 @@
+const relationsOmmatidiaToTerms = (table) => {
+  table.integer('om_id').unsigned();
+  table.integer('term_id').unsigned();
+  table.foreign('om_id').references('ommatidia.om_id')
+       .onUpdate('CASCADE')
+       .onDelete('CASCADE');
+  table.foreign('term_id').references('terms.term_id')
+       .onUpdate('CASCADE')
+       .onDelete('CASCADE');
+};
 
 exports.up = (knex, Promise) => (
   knex.schema.raw(`
@@ -58,6 +68,12 @@ exports.up = (knex, Promise) => (
              .onUpdate('CASCADE')
              .onDelete('SET NULL');
       }),
+
+      knex.schema.createTable('ommatidia_personality', relationsOmmatidiaToTerms),
+      knex.schema.createTable('ommatidia_matter', relationsOmmatidiaToTerms),
+      knex.schema.createTable('ommatidia_energy', relationsOmmatidiaToTerms),
+      knex.schema.createTable('ommatidia_space', relationsOmmatidiaToTerms),
+      knex.schema.createTable('ommatidia_time', relationsOmmatidiaToTerms),
     ]))
     .then(() => knex.schema.raw('CREATE TRIGGER sync_lastmod BEFORE UPDATE ON files FOR EACH ROW EXECUTE PROCEDURE sync_lastmod();'))
     .then(() => knex.schema.raw('CREATE TRIGGER sync_lastmod BEFORE UPDATE ON tracked_files FOR EACH ROW EXECUTE PROCEDURE sync_lastmod();'))
@@ -70,4 +86,9 @@ exports.down = knex => (
     .then(() => knex.schema.dropTable('files'))
     .then(() => knex.schema.dropTable('ommatidia'))
     .then(() => knex.schema.dropTable('tracked_files'))
+    .then(() => knex.schema.dropTable('ommatidia_personality'))
+    .then(() => knex.schema.dropTable('ommatidia_matter'))
+    .then(() => knex.schema.dropTable('ommatidia_energy'))
+    .then(() => knex.schema.dropTable('ommatidia_space'))
+    .then(() => knex.schema.dropTable('ommatidia_time'))
 );
