@@ -1,6 +1,6 @@
 import fs from 'fs';
 import crypto from 'crypto';
-
+import yaml from 'js-yaml';
 import Promise from 'bluebird';
 
 export const isOmmatidiaFile = filename => /^\*.*\.om$/.test(filename);
@@ -25,4 +25,21 @@ export function hashFile(file) {
     stream.on('error', reject);
   });
   return promise;
+}
+
+export function loadOmmatidiaFile(filename) {
+  try {
+    const frontmatter = /^(-{3,}(?:\n|\r)([\w\W]+?)(?:\n|\r)-{3,})([\w\W]*)*/;
+    const contents = fs.readFileSync(filename, 'utf8');
+    if (contents instanceof Error) throw contents;
+    const results = frontmatter.exec(contents);
+    const meta = (results[2]) ? yaml.safeLoad(results[2]) : {};
+    let description = results[3];
+    if (typeof description === 'string') description = description.trim();
+    return { include: meta.include, title: meta.title, meta, description };
+  } catch (e) {
+    console.warn('unable to load Om file:', filename);
+    console.warn(e, e.stack);
+    return null;
+  }
 }
