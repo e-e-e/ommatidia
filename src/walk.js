@@ -5,7 +5,6 @@ import path from 'path';
 import Promise from 'bluebird';
 import minimatch from 'minimatch';
 import chalk from 'chalk';
-import _ from 'lodash';
 
 import {
   isOmmatidiaFile,
