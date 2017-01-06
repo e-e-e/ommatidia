@@ -57,7 +57,8 @@ function invoke(env) {
     .option('-v, --verbose')
     .action((options) => {
       console.log('STATUS');
-      pending = initOmmatidia(env).status()
+      pending = initOmmatidia(env)
+        .status(options)
         .then(() => success())
         .catch(exit);
     });
@@ -68,7 +69,8 @@ function invoke(env) {
     .option('-f, --force', 'Force rebuild of database tables.')
     .action((options) => {
       console.log('INIT');
-      pending = initOmmatidia(env).initialiseDatabase()
+      pending = initOmmatidia(env)
+        .initialiseDatabase(options)
         .then(() => success('Successfully Initialised Database!'))
         .catch(exit);
     });
@@ -80,7 +82,10 @@ function invoke(env) {
     .option('-f, --force', 'Force rebuild of ommatidia data, if database already built.')
     .action((options) => {
       console.log('BUILD');
-      const ommatidia = initOmmatidia(env);
+      pending = initOmmatidia(env)
+        .build(options)
+        .then(() => success('Successfully built ommatidia directory!'))
+        .catch(exit);
     });
 
   commander.command('update')
@@ -90,19 +95,26 @@ function invoke(env) {
     .option('-f, --force', 'Force rebuild of ommatidia data, if database already built.')
     .action((options) => {
       console.log('UPDATE');
-      const ommatidia = initOmmatidia(env);
+      pending = initOmmatidia(env)
+        .update(options)
+        .then(() => success('Successfully updated ommatidia directory!'))
+        .catch(exit);
     });
 
   commander.command('make <files...>')
     .description('Create new empty *.<fn>.om files for specified files.')
     .action((files) => {
-      pending = Promise.each(files, filename => Ommatidia.makeOmFile(filename)).catch(exit);
+      pending = Promise.each(files, filename => Ommatidia.makeOmFile(filename))
+        .then(() => success('Successfully made om files!'))
+        .catch(exit);
     });
 
   commander.command('make:base')
     .description('Create new empty *.om file.')
     .action(() => {
-      pending = Ommatidia.makeOmFile().catch(exit);
+      pending = Ommatidia.makeOmFile()
+        .then(() => success('Successfully made a new empty *.om file!'))
+        .catch(exit);
     });
 
   commander.parse(process.argv);
