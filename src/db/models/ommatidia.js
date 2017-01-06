@@ -1,46 +1,44 @@
 import path from 'path';
 import chalk from 'chalk';
-import knex from '../knex';
 import { hashFile } from '../../utils';
 
+export class TrackedFiles {
+  constructor(knex) {
+    this.trackedFiles = () => knex('tracked_files');
+    this.ommatidia = () => knex('ommatidia');
+  }
 
-const TrackedFiles = () => knex('tracked_files');
-const Files = () => knex('files');
-const Ommatidia = () => knex('ommatidia');
+  static async mapData(src) {
+    return {
+      md5: await hashFile(src),
+      filename: path.basename(src),
+      path: path.dirname(src),
+    };
+  }
 
-async function mapFileData(src, omId) {
-  return {
-    md5: await hashFile(src),
-    name: path.basename(src),
-    path: path.dirname(src),
-    original_name: path.basename(src),
-    original_path: path.dirname(src),
-    related_om: omId,
-  };
-}
-
-async function mapTrackedFileData(src) {
-  return {
-    md5: await hashFile(src),
-    filename: path.basename(src),
-    path: path.dirname(src),
-  };
-}
-
-export const trackedFiles = {
-  add: async (filepath) => {
-    const file = await mapTrackedFileData(filepath);
+  async add(filepath) {
+    const file = await TrackedFiles.mapData(filepath);
     console.log(chalk.gray(chalk.bold('Tracking file:'), filepath));
-    return TrackedFiles().insert(file).returning('tracked_id').then(res => res[0]);
-  },
-  all: () => trackedFiles().select(),
-  get: hash => TrackedFiles().select().where({ md5: hash }),
-  delete: fileId => TrackedFiles().where({ file_id: fileId }).del(),
-  effected: fileId => Ommatidia().select().where({ source_file_id: fileId }),
-};
+    return this.trackedFiles().insert(file).returning('tracked_id').then(res => res[0]);
+  }
 
-export const ommatidia = {
-  add: (omData, srcFileId, parentId) => {
+  all = () => this.trackedFiles().select();
+
+  get = hash => this.trackedFiles().select().where({ md5: hash });
+
+  delete = fileId => this.trackedFiles().where({ file_id: fileId }).del();
+
+  effected = fileId => this.ommatidia().select().where({ source_file_id: fileId });
+}
+
+export class OmmatidiaMetadata {
+  constructor(knex) {
+    this.knex = knex;
+    this.ommatidia = () => knex('ommatidia');
+    this.files = () => knex('files');
+  }
+
+  add(omData, srcFileId, parentId) {
     const om = {
       source_file_id: srcFileId,
       parent: parentId || null,
@@ -48,11 +46,14 @@ export const ommatidia = {
       description: omData.description,
       metadata: omData.meta,
     };
-    return Ommatidia().insert(om).returning('om_id').then(res => res[0]);
-  },
-  all: () => Ommatidia().select(),
-  get: id => Ommatidia().where({ om_id: id }).select(),
-  getFull: id => knex.raw(`
+    return this.ommatidia().insert(om).returning('om_id').then(res => res[0]);
+  }
+
+  all = () => this.ommatidia().select();
+
+  get = id => this.ommatidia().where({ om_id: id }).select();
+
+  getFull = id => this.knex.raw(`
     WITH RECURSIVE all_metadata(metadata, description, parent, om_id, depth) AS (
         SELECT o.metadata, o.description, o.parent, o.om_id, 1 
         FROM ommatidia o 
@@ -63,15 +64,32 @@ export const ommatidia = {
         WHERE o.om_id = am.parent
     )
     SELECT * FROM all_metadata ORDER BY depth DESC;
-  `, [id]),
-  delete: id => Ommatidia().where({ om_id: id }).del(),
-  relatedFiles: id => Files.select().where({ related_om: id }),
-};
+  `, [id]);
 
-export const ommatidiaFiles = {
-  add: async (filepath, omId) => {
-    const file = await mapFileData(filepath, omId);
+  delete = id => this.ommatidia().where({ om_id: id }).del();
+
+  relatedFiles = id => this.files().select().where({ related_om: id })
+}
+
+export class Files {
+  constructor(knex) {
+    this.files = () => knex('files');
+  }
+
+  static async mapData(src, omId) {
+    return {
+      md5: await hashFile(src),
+      name: path.basename(src),
+      path: path.dirname(src),
+      original_name: path.basename(src),
+      original_path: path.dirname(src),
+      related_om: omId,
+    };
+  }
+
+  async add(filepath, omId) {
+    const file = await Files.mapData(filepath, omId);
     console.log(chalk.gray(chalk.bold('Adding file:'), filepath));
-    return Files().insert(file).returning('file_id');
-  },
-};
+    return this.files().insert(file).returning('file_id');
+  }
+}
