@@ -2,12 +2,14 @@ import fs from 'fs';
 import path from 'path';
 
 import Promise from 'bluebird';
-import { template } from 'lodash';
+import _ from 'lodash';
 import chalk from 'chalk';
 
 import Knex from 'knex';
 import Thesaurus from './db/models/thesaurus';
-import { generateOmFilename, isOmmatidiaFile } from './utils';
+import { OmmatidiaMetadata, Files, TrackedFiles } from './db/models/ommatidia';
+import { generateOmFilename, isOmmatidiaFile, loadOmmatidiaFile } from './utils';
+import walk from './walk';
 
 const fsStat = Promise.promisify(fs.stat);
 const fsReadFile = Promise.promisify(fs.readFile);
@@ -15,7 +17,6 @@ const fsWriteFile = Promise.promisify(fs.writeFile);
 
 export default class Ommatidia {
   constructor(config) {
-    console.log(config);
     // establishdata base connection here using
     this.knex = Knex({
       client: 'pg',
@@ -29,7 +30,12 @@ export default class Ommatidia {
     });
     // should test to see if one exists before trying to load it.
     this.thesaurusFile = config.thesaurus;
-    this.thesaurus = new Thesaurus(this.knex);
+    this.db = {
+      thesaurus: new Thesaurus(this.knex),
+      ommatidiaFiles: new OmmatidiaMetadata(this.knex),
+      trackedFiles: new TrackedFiles(this.knex),
+      files: new Files(this.knex),
+    };
   }
 
   static makeOmFile = (file) => {
@@ -63,7 +69,7 @@ export default class Ommatidia {
           ? path.basename(file, path.extname(file))
           : path.basename(process.cwd());
         const newOmFile = path.join(process.cwd(), fn);
-        const data = template(templateString)({ title });
+        const data = _.template(templateString)({ title });
         console.log(`Making new om file ${newOmFile}, with default title: ${chalk.green(title)}.`);
         return fsWriteFile(newOmFile, data, { flag: 'wx' });
       });
@@ -76,14 +82,65 @@ export default class Ommatidia {
     // how many terms in the theasurus
     // where is the base directory.
     //
-    return this.thesaurus.count().then(count => console.log('term count:', count));
+    return this.db.thesaurus.count().then(count => console.log('term count:', count));
   }
 
   initialiseDatabase() {
     const filename = path.join(process.cwd(), this.thesaurusFile);
     return this.knex.migrate.rollback()
       .then(() => this.knex.migrate.latest())
-      .then(() => this.thesaurus.build(filename));
+      .then(() => this.db.thesaurus.build(filename));
+  }
+
+  processOmDirectory = async (dir, folders, omFiles, notOmFiles, baseOm, parentId) => {
+    const processOmFile = (baseOmId, include, sourceFileId) =>
+      async ({ omFile, relatedFile }) => {
+        let parent = baseOmId;
+        const omFilepath = path.join(dir, omFile);
+        const specificOmData = loadOmmatidiaFile(omFilepath);
+        if (include) {
+          const otherMetadata = include[relatedFile];
+          if (otherMetadata && !_.isEmpty(otherMetadata)) {
+            parent = await this.db.ommatidiaMetadata.add(otherMetadata, sourceFileId, baseOmId);
+          }
+        }
+        const omSourceFileId = await this.db.trackedFiles.add(omFilepath);
+        const omId = await this.db.ommatidiaMetadata.add(specificOmData, omSourceFileId, parent);
+        return this.db.files.add(path.join(dir, relatedFile), omId);
+      };
+
+    const processInclude = (baseOmId, sourceFileId) =>
+      async ({ filepath, metadata }) => {
+        let metaId = baseOmId;
+        if (!_.isEmpty(metadata)) {
+          metaId = await this.db.ommatidiaMetadata.add(metadata, sourceFileId, baseOmId);
+        }
+        await this.db.files.add(filepath, metaId);
+      };
+
+    let baseOmId = parentId;
+
+    if (baseOm) {
+      const sourceFileId = await this.db.trackedFiles.add(baseOm.baseOmFilepath);
+      baseOmId = await this.db.ommatidiaMetadata.add(baseOm.omData, sourceFileId, parentId);
+
+      await Promise.each(omFiles, processOmFile(baseOmId, baseOm.include, sourceFileId));
+
+      if (baseOm.include) {
+        let filesStillToInclude = _.omit(baseOm.include, omFiles.map(om => om.relatedFile));
+        filesStillToInclude = _.map(filesStillToInclude,
+          (v, k) => ({ filepath: path.join(dir, k), metadata: v }));
+        await Promise.each(filesStillToInclude, processInclude(baseOmId, sourceFileId));
+      }
+    } else {
+      // just process omFiles
+      await Promise.each(omFiles, processOmFile(dir, baseOmId));
+    }
+    return baseOmId;
+  }
+
+  build(dir) {
+    return walk(dir, this.processOmDirectory);
   }
 
 }
