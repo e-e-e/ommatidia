@@ -2,6 +2,7 @@ import fs from 'fs';
 
 import Promise from 'bluebird';
 import yaml from 'js-yaml';
+import _ from 'lodash';
 
 const isFacet = name => /\(.+\)/.test(name);
 
@@ -11,21 +12,41 @@ export default class Thesaurus {
     this.Terms = () => knex('terms');
     this.RelatedTerms = () => knex('related_terms');
     this.NarrowerTerms = () => knex('narrower_terms');
+    this.TermsWithRoots = () => knex('terms_with_roots');
   }
 
-  viewExists() {
-    return this.knex.raw('select count(*) from pg_class where relname=\'terms_with_roots\' and relkind=\'m\'');
-  }
+  // GETTER FUNCTIONS
 
-  refreshView() {
-    return this.knex.raw('REFRESH MATERIALIZED VIEW terms_with_roots WITH DATA');
-  }
+  facetId = _.memoize(facet =>
+    this.Terms()
+      .where('term', `(by ${facet})`)
+      .andWhere('bt', null)
+      .select('term_id'),
+    )
+
+  allTermsByFacet = _.memoize(facet =>
+    this.TermsWithRoots()
+      .where('root', 'in', this.facetId(facet))
+      .andWhere('facet', false)
+      .select('term', 'term_id'),
+    )
 
   count(includeFacets = false) {
     const query = (includeFacets)
       ? this.Terms().count()
       : this.Terms().where('facet', false).count();
     return query.then(results => results[0].count);
+  }
+
+  // viewExists() {
+  //   return this.knex
+  // .raw('select count(*) from pg_class where relname=\'terms_with_roots\' and relkind=\'m\'');
+  // }
+
+  // SETTER FUNCTIONS
+
+  refreshView() {
+    return this.knex.raw('REFRESH MATERIALIZED VIEW terms_with_roots WITH DATA');
   }
 
   build(thesaurusFile) {

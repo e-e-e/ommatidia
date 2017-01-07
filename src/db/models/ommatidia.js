@@ -1,6 +1,6 @@
 import path from 'path';
 import chalk from 'chalk';
-import { hashFile } from '../../utils';
+import { hashFile, relativeToCwd } from '../../utils';
 
 export class TrackedFiles {
   constructor(knex) {
@@ -18,7 +18,7 @@ export class TrackedFiles {
 
   async add(filepath) {
     const file = await TrackedFiles.mapData(filepath);
-    console.log(chalk.gray(chalk.bold('Tracking file:'), filepath));
+    console.log(chalk.gray(chalk.bold('Tracking file:'), relativeToCwd(filepath)));
     return this.trackedFiles().insert(file).returning('tracked_id').then(res => res[0]);
   }
 
@@ -46,8 +46,12 @@ export class OmmatidiaMetadata {
       description: omData.description,
       metadata: omData.meta,
     };
-    console.log('inserting om:', om);
     return this.ommatidia().insert(om).returning('om_id').then(res => res[0]);
+  }
+
+  addSubjects(omId, facet, subjects) {
+    const data = subjects.map(subject => ({ om_id: omId, term_id: subject.term_id }));
+    return this.knex(`ommatidia_${facet.toLowerCase()}`).insert(data);
   }
 
   all = () => this.ommatidia().select();
@@ -90,7 +94,7 @@ export class Files {
 
   async add(filepath, omId) {
     const file = await Files.mapData(filepath, omId);
-    console.log(chalk.gray(chalk.bold('Adding file:'), filepath));
+    console.log(chalk.gray(chalk.bold('Adding file:'), relativeToCwd(filepath)));
     return this.files().insert(file).returning('file_id');
   }
 }
