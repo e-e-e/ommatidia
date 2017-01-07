@@ -46,6 +46,7 @@ export class OmmatidiaMetadata {
       description: omData.description,
       metadata: omData.meta,
     };
+    console.log('inserting om:', om);
     return this.ommatidia().insert(om).returning('om_id').then(res => res[0]);
   }
 

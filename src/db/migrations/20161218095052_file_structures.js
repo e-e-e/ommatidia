@@ -83,12 +83,12 @@ exports.up = (knex, Promise) => (
 exports.down = knex => (
   knex.schema.raw('DROP FUNCTION IF EXISTS sync_lastmod() CASCADE;')
     .then(() => knex.schema.raw('DROP FUNCTION IF EXISTS replace_parent_with_parent() CASCADE;'))
-    .then(() => knex.schema.dropTable('files'))
-    .then(() => knex.schema.dropTable('ommatidia'))
-    .then(() => knex.schema.dropTable('tracked_files'))
     .then(() => knex.schema.dropTable('ommatidia_personality'))
     .then(() => knex.schema.dropTable('ommatidia_matter'))
     .then(() => knex.schema.dropTable('ommatidia_energy'))
     .then(() => knex.schema.dropTable('ommatidia_space'))
     .then(() => knex.schema.dropTable('ommatidia_time'))
+    .then(() => knex.schema.dropTable('files'))
+    .then(() => knex.schema.dropTable('ommatidia'))
+    .then(() => knex.schema.dropTable('tracked_files'))
 );

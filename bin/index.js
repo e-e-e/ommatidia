@@ -1,5 +1,4 @@
 #!/usr/bin/env node
-
 const Promise = require('bluebird');
 const Liftoff = require('liftoff');
 const chalk = require('chalk');

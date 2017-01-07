@@ -38,10 +38,26 @@ exports.up = (knex, Promise) => (
       table.unique(['t_id', 'rt_id']);
     }),
   ])
+  .then(() => knex.raw(`
+    CREATE MATERIALIZED VIEW IF NOT EXISTS terms_with_roots 
+    AS
+      WITH RECURSIVE root_parent AS (
+        SELECT t.term_id, t.term, t.facet, t.bt, t.term_id::INT AS root, 1::INT AS depth 
+        FROM terms AS t 
+        WHERE t.bt IS NULL
+      UNION ALL
+        SELECT t.term_id, t.term, t.facet, t.bt, p.root, p.depth + 1 AS depth 
+        FROM root_parent AS p, terms AS t 
+        WHERE t.bt = p.term_id
+      )
+      SELECT * FROM root_parent AS n ORDER BY n.term_id ASC
+    WITH NO DATA;
+  `))
 );
 
 exports.down = knex => (
-  knex.schema.dropTable('narrower_terms')
+  knex.raw('DROP MATERIALIZED VIEW IF EXISTS terms_with_roots')
+    .then(() => knex.schema.dropTable('narrower_terms'))
     .then(() => knex.schema.dropTable('related_terms'))
     .then(() => knex.schema.dropTable('terms'))
 );

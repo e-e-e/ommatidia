@@ -18,6 +18,7 @@ const fsWriteFile = Promise.promisify(fs.writeFile);
 export default class Ommatidia {
   constructor(config) {
     // establishdata base connection here using
+    console.log(config);
     this.knex = Knex({
       client: 'pg',
       connection: config.database || 'postgres://localhost/ommatidia',
@@ -32,10 +33,11 @@ export default class Ommatidia {
     this.thesaurusFile = config.thesaurus;
     this.db = {
       thesaurus: new Thesaurus(this.knex),
-      ommatidiaFiles: new OmmatidiaMetadata(this.knex),
+      ommatidiaMetadata: new OmmatidiaMetadata(this.knex),
       trackedFiles: new TrackedFiles(this.knex),
       files: new Files(this.knex),
     };
+    this.baseDir = process.cwd();
   }
 
   static makeOmFile = (file) => {
@@ -92,7 +94,7 @@ export default class Ommatidia {
       .then(() => this.db.thesaurus.build(filename));
   }
 
-  processOmDirectory = async (dir, folders, omFiles, notOmFiles, baseOm, parentId) => {
+  processOmDirectory = async (dir, { folders, omFiles, notOmFiles, baseOm }, parentId) => {
     const processOmFile = (baseOmId, include, sourceFileId) =>
       async ({ omFile, relatedFile }) => {
         let parent = baseOmId;
@@ -134,13 +136,14 @@ export default class Ommatidia {
       }
     } else {
       // just process omFiles
-      await Promise.each(omFiles, processOmFile(dir, baseOmId));
+      await Promise.each(omFiles, processOmFile(baseOmId));
     }
     return baseOmId;
   }
 
-  build(dir) {
-    return walk(dir, this.processOmDirectory);
+  build(options) {
+    console.log(options);
+    return walk(this.baseDir, this.processOmDirectory);
   }
 
 }

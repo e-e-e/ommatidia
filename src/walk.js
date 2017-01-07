@@ -1,4 +1,3 @@
-import {} from 'dotenv/config';
 import fs from 'fs';
 import path from 'path';
 
@@ -97,10 +96,11 @@ async function getFolderContents(dir) {
 export default async function walkDirectory(dir, fn, data) {
   console.log(chalk.bold('Crawling:'), dir);
   const folderContents = await getFolderContents(dir);
-  const returnData = await fn(dir, ...folderContents, data);
+  console.log(folderContents);
+  const returnData = await fn(dir, folderContents, data);
   // recursively crawl directories
   return Promise.mapSeries(
     folderContents.folders,
-    folder => walkDirectory(path.join(dir, folder), returnData),
+    folder => walkDirectory(path.join(dir, folder), fn, returnData),
   );
 }
