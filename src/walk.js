@@ -96,7 +96,6 @@ async function getFolderContents(dir) {
 export default async function walkDirectory(dir, fn, data) {
   console.log(chalk.bold('Crawling:'), dir);
   const folderContents = await getFolderContents(dir);
-  console.log(folderContents);
   const returnData = await fn(dir, folderContents, data);
   // recursively crawl directories
   return Promise.mapSeries(
