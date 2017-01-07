@@ -1,7 +1,10 @@
 import fs from 'fs';
+import path from 'path';
 import crypto from 'crypto';
 import yaml from 'js-yaml';
 import Promise from 'bluebird';
+
+export const relativeToCwd = filepath => path.relative(process.cwd(), filepath);
 
 export const isOmmatidiaFile = filename => /^\*.*\.om$/.test(filename);
 
