@@ -84,8 +84,6 @@ export class Files {
   static async mapData(src, omId) {
     return {
       md5: await hashFile(src),
-      name: path.basename(src),
-      path: path.dirname(src),
       original_name: path.basename(src),
       original_path: path.dirname(src),
       related_om: omId,
@@ -95,6 +93,16 @@ export class Files {
   async add(filepath, omId) {
     const file = await Files.mapData(filepath, omId);
     console.log(chalk.gray(chalk.bold('Adding file:'), relativeToCwd(filepath)));
-    return this.files().insert(file).returning('file_id');
+    return this.files()
+      .insert(file)
+      .returning('file_id')
+      .catch((error) => {
+        const re = /duplicate key value violates unique constraint "tracked_files_md5_unique"/;
+        if (re.test(error.message)) {
+          console.log(chalk.yellow('FILE NOT ADDED: is identical to another file already included.'));
+        } else {
+          throw error;
+        }
+      });
   }
 }
