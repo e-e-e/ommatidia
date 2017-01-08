@@ -39,6 +39,32 @@ exports.up = (knex, Promise) => (
     }),
   ])
   .then(() => knex.raw(`
+    CREATE OR REPLACE FUNCTION subjectCode(ordinal int, facet boolean DEFAULT false ) RETURNS text
+    AS $$
+    DECLARE
+      x int; 
+    BEGIN
+      IF facet THEN 
+        IF ordinal < 26 THEN
+          x := ordinal + 65;
+          return CHR(x);
+        ELSE 
+          return '-' || subjectCode(ordinal - 26, facet);
+        END IF;
+      ELSE 
+        x := ordinal + 1;
+        IF (x > 9 AND x < (26 + 9)) THEN
+          RETURN CHR(97 + (x - 9));
+        ELSIF (x >= 26 + 9) THEN
+          RETURN '0' || subjectCode(x - (26 + 9), facet);
+        ELSE
+          RETURN x;
+        END IF;
+      END IF;
+    END
+    $$ LANGUAGE plpgsql;
+  `))
+  .then(() => knex.raw(`
     CREATE MATERIALIZED VIEW IF NOT EXISTS terms_with_roots 
     AS
       WITH RECURSIVE root_parent AS (
@@ -57,6 +83,7 @@ exports.up = (knex, Promise) => (
 
 exports.down = knex => (
   knex.raw('DROP MATERIALIZED VIEW IF EXISTS terms_with_roots')
+    .then(() => knex.raw('DROP FUNCTION subjectCode(int, boolean);'))
     .then(() => knex.schema.dropTable('narrower_terms'))
     .then(() => knex.schema.dropTable('related_terms'))
     .then(() => knex.schema.dropTable('terms'))
