@@ -2,6 +2,7 @@ import path from 'path';
 
 import Promise from 'bluebird';
 import _ from 'lodash';
+import chalk from 'chalk';
 
 import { loadOmmatidiaFile } from './utils';
 
@@ -12,14 +13,20 @@ export default (db) => {
     if (!subjects || subjects.length === 0) return null;
     const availableSubjects = await db.thesaurus.allTermsByFacet(facet);
     const subjectsToAdd = subjects
-      .map((term) => {
+      .map((term, index, self) => {
         const subject = availableSubjects.find(s => s.term === term);
-        if (subject === undefined) console.warn(`Subject ${term} was not found within the ${facet} facet.`);
+        if (subject === undefined) {
+          console.log(chalk.yellow(`Subject ${chalk.bold(term)} was not found within the ${chalk.bold(facet)} facet.`));
+        }
+        if (self.indexOf(term) !== index) {
+          console.log(chalk.yellow(`Subject ${chalk.bold(term)} is duplicated in the ${chalk.bold(facet)} facet.`));
+          return undefined;
+        }
         return subject;
       })
       .filter(subject => subject !== undefined);
     if (subjectsToAdd.length) {
-      console.log('attempting to add subjects:', subjectsToAdd);
+      console.log(chalk.gray('Attempting to add subjects:', subjectsToAdd.map(s => s.term).join(',')));
       return db.ommatidiaMetadata.addSubjects(omId, facet, subjectsToAdd);
     }
     return null;
@@ -40,7 +47,6 @@ export default (db) => {
       const omId = await db.ommatidiaMetadata.add(specificOmData, omSourceFileId, parent);
       await db.files.add(path.join(dir, relatedFile), omId);
       const subjects = specificOmData.meta.subjects;
-      console.log('SUBJECTS', subjects);
       return (typeof subjects === 'object')
         ? Promise.all(FACETS.map(facet => processOmSubjects(omId, facet, subjects[facet])))
         : null;
