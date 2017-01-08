@@ -60,8 +60,9 @@ exports.up = (knex, Promise) => (
       knex.schema.createTable('files', (table) => {
         table.increments('file_id');
         table.integer('related_om').unsigned();
-        table.string('name').notNullable();
-        table.text('path').notNullable();
+        table.string('name');
+        table.text('path');
+        table.boolean('updated').defaultTo(false).notNullable();
         table.string('original_name').notNullable();
         table.text('original_path').notNullable();
         table.string('md5', 32).unique().notNullable();
