@@ -39,6 +39,17 @@ exports.up = (knex, Promise) => (
     }),
   ])
   .then(() => knex.raw(`
+    CREATE OR REPLACE FUNCTION baseFacetCode(ordinal int) RETURNS text
+    AS $$
+    DECLARE
+      facets  text[];
+    BEGIN
+      facets = array[',', ';' , ':', '''' , '.'];
+      RETURN facets[ordinal+1];
+    END
+    $$ LANGUAGE plpgsql;
+  `))
+  .then(() => knex.raw(`
     CREATE OR REPLACE FUNCTION subjectCode(ordinal int, facet boolean DEFAULT false ) RETURNS text
     AS $$
     DECLARE
@@ -68,11 +79,17 @@ exports.up = (knex, Promise) => (
     CREATE MATERIALIZED VIEW IF NOT EXISTS terms_with_roots 
     AS
       WITH RECURSIVE root_parent AS (
-        SELECT t.term_id, t.term, t.facet, t.bt, t.term_id::INT AS root, 1::INT AS depth 
+        SELECT t.term_id, t.term, t.facet, t.bt, 
+          t.term_id::INT AS root, 
+          1::INT AS depth, 
+          baseFacetCode(t.ordinal)::TEXT AS code
         FROM terms AS t 
         WHERE t.bt IS NULL
       UNION ALL
-        SELECT t.term_id, t.term, t.facet, t.bt, p.root, p.depth + 1 AS depth 
+        SELECT t.term_id, t.term, t.facet, t.bt, 
+          p.root, 
+          p.depth + 1 AS depth,
+          p.code || subjectCode(t.ordinal, t.facet) AS code
         FROM root_parent AS p, terms AS t 
         WHERE t.bt = p.term_id
       )
@@ -83,6 +100,7 @@ exports.up = (knex, Promise) => (
 
 exports.down = knex => (
   knex.raw('DROP MATERIALIZED VIEW IF EXISTS terms_with_roots')
+    .then(() => knex.raw('DROP FUNCTION baseFacetCode(int);'))
     .then(() => knex.raw('DROP FUNCTION subjectCode(int, boolean);'))
     .then(() => knex.schema.dropTable('narrower_terms'))
     .then(() => knex.schema.dropTable('related_terms'))
