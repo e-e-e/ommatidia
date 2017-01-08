@@ -19,7 +19,18 @@ export class TrackedFiles {
   async add(filepath) {
     const file = await TrackedFiles.mapData(filepath);
     console.log(chalk.gray(chalk.bold('Tracking file:'), relativeToCwd(filepath)));
-    return this.trackedFiles().insert(file).returning('tracked_id').then(res => res[0]);
+    return this.trackedFiles()
+      .insert(file)
+      .returning('tracked_id')
+      .then(res => res[0])
+      .catch((error) => {
+        const re = /duplicate key value violates unique constraint "tracked_files_md5_unique"/;
+        if (re.test(error.message)) {
+          console.log(chalk.yellow('FILE NOT TRACKED: is identical to another file already included.'));
+        } else {
+          throw error;
+        }
+      });
   }
 
   all = () => this.trackedFiles().select();
@@ -97,7 +108,7 @@ export class Files {
       .insert(file)
       .returning('file_id')
       .catch((error) => {
-        const re = /duplicate key value violates unique constraint "tracked_files_md5_unique"/;
+        const re = /duplicate key value violates unique constraint "files_md5_unique"/;
         if (re.test(error.message)) {
           console.log(chalk.yellow('FILE NOT ADDED: is identical to another file already included.'));
         } else {
