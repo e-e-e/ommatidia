@@ -9,7 +9,8 @@ import { loadOmmatidiaFile } from './utils';
 import { FACETS } from './consts';
 
 export default (db) => {
-  const processOmSubjects = async (omId, facet, subjects) => {
+
+  const processFacet = async (omId, facet, subjects) => {
     if (!subjects || subjects.length === 0) return null;
     const availableSubjects = await db.thesaurus.allTermsByFacet(facet);
     const subjectsToAdd = subjects
@@ -27,9 +28,17 @@ export default (db) => {
       .filter(subject => subject !== undefined);
     if (subjectsToAdd.length) {
       console.log(chalk.gray('Attempting to add subjects:', subjectsToAdd.map(s => s.term).join(',')));
-      return db.ommatidiaMetadata.addSubjects(omId, facet, subjectsToAdd);
+      await db.ommatidiaMetadata.addSubjects(omId, facet, subjectsToAdd);
     }
-    return null;
+    return subjectsToAdd;
+  };
+
+  const processOmSubjects = async (omId, subjects) => {
+    if (typeof subjects === 'object') {
+      const addedSubjects = await Promise.all(FACETS.map(facet => processFacet(omId, facet, subjects[facet])));
+      console.log('wooooo', addedSubjects.map(s => s && s.map(subject => subject.code).join('')).join(''));
+    }
+    return '';
   };
 
   const processOmFile = (dir, baseOmId, include, sourceFileId) =>
@@ -45,11 +54,8 @@ export default (db) => {
       }
       const omSourceFileId = await db.trackedFiles.add(omFilepath);
       const omId = await db.ommatidiaMetadata.add(specificOmData, omSourceFileId, parent);
-      await db.files.add(path.join(dir, relatedFile), omId);
-      const subjects = specificOmData.meta.subjects;
-      return (typeof subjects === 'object')
-        ? Promise.all(FACETS.map(facet => processOmSubjects(omId, facet, subjects[facet])))
-        : null;
+      await processOmSubjects(omId, specificOmData.meta.subjects);
+      return db.files.add(path.join(dir, relatedFile), omId);
     };
 
   const processInclude = (baseOmId, sourceFileId) =>
@@ -67,14 +73,8 @@ export default (db) => {
     if (baseOm) {
       const sourceFileId = await db.trackedFiles.add(baseOm.baseOmFilepath);
       baseOmId = await db.ommatidiaMetadata.add(baseOm.omData, sourceFileId, parentId);
-
+      await processOmSubjects(baseOmId, baseOm.omData.meta.subjects);
       await Promise.each(omFiles, processOmFile(dir, baseOmId, baseOm.include, sourceFileId));
-      const baseOmSubjects = baseOm.omData.meta.subjects;
-      if (typeof baseOmSubjects === 'object') {
-        await Promise.all(
-          FACETS.map(facet => processOmSubjects(baseOmId, facet, baseOmSubjects[facet])),
-        );
-      }
 
       if (baseOm.include) {
         let filesStillToInclude = _.omit(baseOm.include, omFiles.map(om => om.relatedFile));

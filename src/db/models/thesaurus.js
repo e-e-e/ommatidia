@@ -28,7 +28,7 @@ export default class Thesaurus {
     this.TermsWithRoots()
       .where('root', 'in', this.facetId(facet))
       .andWhere('facet', false)
-      .select('term', 'term_id'),
+      .select('term', 'term_id', 'code'),
     )
 
   count(includeFacets = false) {
