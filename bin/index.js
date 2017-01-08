@@ -26,7 +26,8 @@ function initOmmatidia(env) {
   if (!env.configPath) {
     exit('No ommatidia config file found in this directory. Specify a path with --omfile');
   } else if (process.cwd() !== env.configBase) {
-    process.chdir(env.configPath);
+    console.log(env.configBase);
+    process.chdir(env.configBase);
   }
   const config = require(env.configPath); // eslint-disable-line
   return new Ommatidia(config);
