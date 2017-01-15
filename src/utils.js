@@ -39,7 +39,7 @@ export function loadOmmatidiaFile(filename) {
     const meta = (results[2]) ? yaml.safeLoad(results[2]) : {};
     let description = results[3];
     if (typeof description === 'string') description = description.trim();
-    return { include: meta.include, title: meta.title, meta, description };
+    return { include: meta.include, meta, description };
   } catch (e) {
     console.warn('unable to load Om file:', filename);
     console.warn(e, e.stack);

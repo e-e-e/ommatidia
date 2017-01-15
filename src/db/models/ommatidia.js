@@ -53,7 +53,7 @@ export class OmmatidiaMetadata {
     const om = {
       source_file_id: srcFileId,
       parent: parentId || null,
-      title: omData.title,
+      title: omData.meta.title,
       description: omData.description,
       metadata: omData.meta,
       om_base: isOmBase,
