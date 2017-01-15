@@ -74,7 +74,7 @@ export default (db) => {
     if (baseOm) {
       const sourceFileId = await db.trackedFiles.add(baseOm.baseOmFilepath);
       if (sourceFileId === undefined) return baseOmId;
-      baseOmId = await db.ommatidiaMetadata.add(baseOm.omData, sourceFileId, parentId);
+      baseOmId = await db.ommatidiaMetadata.add(baseOm.omData, sourceFileId, parentId, true);
       await processOmSubjects(baseOmId, baseOm.omData.meta.subjects);
       await Promise.each(omFiles, processOmFile(dir, baseOmId, baseOm.include, sourceFileId));
 

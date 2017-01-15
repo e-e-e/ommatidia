@@ -49,13 +49,14 @@ export class OmmatidiaMetadata {
     this.files = () => knex('files');
   }
 
-  add(omData, srcFileId, parentId) {
+  add(omData, srcFileId, parentId, isOmBase = false) {
     const om = {
       source_file_id: srcFileId,
       parent: parentId || null,
       title: omData.title,
       description: omData.description,
       metadata: omData.meta,
+      om_base: isOmBase,
     };
     return this.ommatidia().insert(om).returning('om_id').then(res => res[0]);
   }

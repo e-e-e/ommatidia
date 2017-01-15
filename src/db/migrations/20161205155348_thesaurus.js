@@ -79,7 +79,7 @@ exports.up = (knex, Promise) => (
     CREATE MATERIALIZED VIEW IF NOT EXISTS terms_with_roots 
     AS
       WITH RECURSIVE root_parent AS (
-        SELECT t.term_id, t.term, t.facet, t.bt, 
+        SELECT t.term_id, t.term, t.facet, t.bt,
           t.term_id::INT AS root, 
           1::INT AS depth, 
           baseFacetCode(t.ordinal)::TEXT AS code

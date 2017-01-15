@@ -44,6 +44,7 @@ exports.up = (knex, Promise) => (
 
       knex.schema.createTable('ommatidia', (table) => {
         table.increments('om_id');
+        table.boolean('om_base').defaultTo(false);
         table.integer('source_file_id').unsigned().notNullable();
         table.integer('parent').unsigned();
         table.text('title');
