@@ -16,7 +16,7 @@ export default (db) => {
     const availableSubjects = await db.thesaurus.allTermsByFacet(facet);
     const subjectsToAdd = subjects
       .map((term, index, self) => {
-        const subject = availableSubjects.find(s => s.term === term);
+        const subject = availableSubjects.find(s => s.term === String(term));
         if (subject === undefined) {
           console.log(chalk.yellow(`Subject ${chalk.bold(term)} was not found within the ${chalk.bold(facet)} facet.`));
         }
