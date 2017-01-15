@@ -1,0 +1,393 @@
+---
+(by personality):
+  Notes: |
+    Personality, the most specific or focal subject.
+    This facet is denoted by a comma (,).
+  NT:
+  - T: (by associated concepts)
+    NT:
+    - T: the internet
+      NT:
+      - T: social media
+      - T: opensource
+    - T: ownership
+      NT:
+      - T: anti-copyright
+      - T: private property
+      - T: intellectual property
+      - T: custodianship
+      - T: the commons
+    - T: absence
+    - T: self-destruction
+    - T: authenticity
+    - T: authority
+    - T: control
+      NT:
+      - T: surveillance
+    - T: visual arts
+      NT:
+      - T: drawing (concept)
+      - T: formalism
+      - T: conceptual art
+      - T: institutional critique
+    - T: television (concept)
+    - T: incompleteness
+    - T: history
+    - T: language
+      NT:
+      - T: spoken
+      - T: written
+        NT:
+        - T: alphabet
+      - T: communication
+        NT:
+        - T: reading
+        - T: writing
+      - T: grammar
+        NT:
+        - T: universal grammar
+      - T: esperanto
+
+    - T: literature
+      NT:
+      - T: canon (formation)
+      - T: publishing
+        NT:
+        - T: editions
+      - T: poetry
+      - T: genres
+        NT:
+        - T: romance
+        - T: crime 
+        - T: thriller
+        - T: science fiction
+        - T: fantasy
+
+    - T: science
+      NT:
+      - T: biology
+      - T: mathematics
+        NT:
+        - T: geometry
+          NT:
+          - T: topology
+        - T: statistics
+          NT:
+          - T: information theory
+        - T: logic
+
+    - T: programming
+      NT:
+      - T: computer vision
+      - T: artificial intelligence
+
+    - T: systems
+      NT:
+      - T: archives
+      - T: libraries
+      - T: museums (subject)
+    - T: philosophy
+      NT:
+      - T: cynicism (kynicism)
+      - T: materialism
+      - T: economics
+      - T: politics
+      - T: knowledge
+        NT:
+        - T: meaning
+        - T: reason
+
+  - T: (by agents)
+    NT:
+    - T: people
+      NT:
+      - T: Benjamin Forster
+      - T: Rhiannon Newton
+    - T: organisations
+      NT:
+      - T: arts organisations
+        NT:
+        - T: artist-run-initatives
+          NT:
+          - T: Firstdraft
+          - T: Success
+          - T: Screenspace
+          - T: The Walls
+          - T: Paper Mountain
+        - T: contemporary artspaces
+          NT:
+          - T: Perth Institute of Contemporary Art
+          - T: Canberra Contemporary Artspace
+          - T: Australia Centre for Contemporary Art
+          - T: Queensland Centre for Photography
+        - T: museums
+          NT:
+          - T: Museum of Contemporary Art Australia
+          - T: Monash University Museum of Art 
+        - T: misc artspaces
+          NT:
+          - T: Performance Space
+          - T: Fremantle Arts Centre
+          - T: Frontyard
+      - T: public institutions
+        NT:
+        - T: State Records Office of Western Australia 
+  - T: (by key referent)
+    NT:
+    - T: Siyali Ramamrita Ranganathan (S.R.R.)
+    - T: Diogenes
+    - T: Noam Chomsky
+    - T: Gilles Deleuze 
+    - T: Karl Marx
+    - T: Adam Smith
+    - T: Walter Benjamin
+    - T: Jorge Luis Borges
+    - T: Claude Shannon
+    - T: Artist Placement Group
+    - T: Jackson Mac Low
+    - T: Ron Silliman
+
+(by matter):
+  Notes: |
+    Matter or property, the substance, properties or materials of the subject.
+    This facet is denoted by a semicolon (;).
+  NT:
+  - T: (by form)
+    NT:
+    - T: book
+      NT:
+      - T: staple bound
+      - T: perfect bound
+      - T: ebook
+      - T: magazine
+    - T: image
+      NT:
+      - T: photograph
+      - T: video still
+      - T: digital image
+      - T: print
+      - T: drawing
+      - T: painting
+    - T: video
+      NT:
+      - T: generative video
+      - T: digital video
+    - T: networked
+      NT:
+      - T: telephone 
+        NT:
+        - T: hotline
+        - T: sms
+      - T: local network
+        NT:
+        - T: wifi
+      - T: online
+        NT:
+        - T: website
+        - T: server
+    - T: code
+      NT:
+      - T: (by programming language)
+        NT:
+        - T: c++
+        - T: javascript
+        - T: python
+      - T: (by framework)
+        NT:
+        - T: nodejs
+        - T: cinder
+        - T: natural language tool kit (NLTK)
+    - T: hardware
+  - T: (by material)
+    NT:
+    - T: natural materials
+      NT:
+      - T: crystal
+      - T: rock
+      - T: dirt
+      - T: wood
+    - T: furniture
+      NT:
+      - T: chair
+      - T: bookshelf
+      - T: plinth
+      - T: table
+    - T: paint
+      NT:
+      - T: acrylic paint
+      - T: water colour
+    - T: pencil
+    - T: pen
+    - T: paper
+      NT:
+      - T: recycled paper
+    - T: office supplies
+      NT:
+      - T: staples
+      - T: paper clips
+    - T: wall vinyl
+    - T: electronic equipment
+      NT:
+      - T: printers
+        NT:
+        - T: reciept printer
+        - T: dot-matrix printer
+      - T: vinyl cutter
+      - T: projectors
+      - T: screens
+        NT:
+        - T: televisions
+          NT:
+          - T: cathode-ray tube
+          - T: flat screen
+        - T: computer screens
+          NT:
+          - T: LCD screen
+      - T: computers
+        NT:
+        - T: laptop
+        - T: tablet
+          NT:
+          - T: iPad
+        - T: microcontroller
+          NT:
+          - T: teensy
+          - T: arduino
+        - T: raspberry pi
+      - T: keyboard
+  - T: (by quality)
+    NT:
+    - T: colour
+    - T: monochrome
+  - T: (by state)
+    NT:
+    - T: finished
+    - T: incomplete
+    - T: destroyed
+    - T: lost
+    - T: sold
+    - T: modified
+    - T: deconstructed
+
+(by energy) :
+  Notes: |
+    Energy, including the processes, operations and activities.
+    This facet is denoted by a colon (:).
+  NT:
+  - T: (by activity)
+    NT:
+    - T: festival
+    - T: conference
+    - T: exhibition
+      NT:
+      - T: solo exhibition
+      - T: group exhibition
+    - T: event
+      NT:
+      - T: workshop
+      - T: reading (event)
+      - T: performance
+        NT:
+        - T: lecture
+        - T: dance
+        - T: theatre
+    - T: residency
+    - T: publication
+      NT:
+      - T: article
+  - T: (by process)
+    NT:
+    - T: erasure
+    - T: endless
+    - T: sampling/extraction
+    - T: algorithmic
+      NT:
+      - T: recursive
+      - T: aleatoric
+      - T: statistical/probabilistic
+    - T: intervention - parasite
+    - T: hacking (electronics)
+
+(by time):
+  Notes: |
+    Time, which refers to the dates or seasons of the subject.
+    This facet is denoted by an apostrophe (').
+  NT:
+  - T: (by temporality)
+    NT:
+    - T: ongoing
+    - T: singular
+    - T: periodic
+      NT:
+      - T: regular period
+        NT:
+          - T: daily
+          - T: weekly
+          - T: monthly
+          - T: annually
+      - T: irregular period
+  - T: (by year)
+    NT:
+    - T: 2000's
+      NT:
+      - T: 2000
+      - T: 2001
+      - T: 2002
+      - T: 2003
+      - T: 2004
+      - T: 2005
+      - T: 2006
+      - T: 2007
+      - T: 2008
+      - T: 2009
+    - T: 2010's
+      NT:
+      - T: 2010
+      - T: 2011
+      - T: 2012
+      - T: 2013
+      - T: 2014
+      - T: 2015
+      - T: 2016
+      - T: 2017
+      - T: 2018
+      - T: 2019
+
+(by space):
+  Notes: |
+    Space, which relates to the geographic location of the subject.
+    This facet is denoted by a period (.).
+  NT:
+  - T: (by geographic area)
+    NT:
+    - T: Australia
+      NT:
+      - T: ACT
+        NT:
+        - T: Canberra 
+      - T: NSW
+        NT:
+        - T: Sydney
+      - T: VIC
+        NT:
+        - T: Melbourne
+      - T: QLD
+        NT:
+        - T: Brisbane
+        - T: Gold Coast
+      - T: WA
+        NT:
+        - T: Perth
+        - T: Fremantle
+    - T: Finland
+      NT:
+      - T: Helsinki
+    - T: Spain
+      NT:
+      - T: Madrid
+    - T: Netherlands
+      NT:
+      - T: Amsterdam
+    - T: USA
+      NT:
+      - T: Cranbrook
