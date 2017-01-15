@@ -31,6 +31,14 @@ export default class Thesaurus {
       .select('term', 'term_id', 'code'),
     )
 
+  log() {
+    return this.TermsWithRoots()
+      .select('term', 'term_id', 'code', 'depth')
+      .then((results) => {
+        results.forEach(result => console.log(' '.repeat((result.depth - 1) * 2) + result.term));
+      });
+  }
+
   count(includeFacets = false) {
     const query = (includeFacets)
       ? this.Terms().count()

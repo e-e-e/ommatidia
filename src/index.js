@@ -85,13 +85,14 @@ export default class Ommatidia {
     // how many terms in the theasurus
     // where is the base directory.
     //
-    return this.db.thesaurus.count().then(count => console.log('term count:', count))
-      .then(() => this.db.thesaurus.allTermsByFacet('space'))
-      .then(console.log)
-      .then(() => this.db.thesaurus.allTermsByFacet('matter'))
-      .then(console.log)
-      .then(() => this.db.thesaurus.allTermsByFacet('space'))
-      .then(console.log);
+    return this.db.thesaurus.log();
+    // return this.db.thesaurus.count().then(count => console.log('term count:', count))
+    //   .then(() => this.db.thesaurus.allTermsByFacet('space'))
+    //   .then(console.log)
+    //   .then(() => this.db.thesaurus.allTermsByFacet('matter'))
+    //   .then(console.log)
+    //   .then(() => this.db.thesaurus.allTermsByFacet('space'))
+    //   .then(console.log);
   }
 
   initialiseDatabase() {
