@@ -2,6 +2,7 @@ import path from 'path';
 
 import Promise from 'bluebird';
 import _ from 'lodash';
+import hash from 'object-hash';
 import chalk from 'chalk';
 
 import { loadOmmatidiaFile } from './utils';
@@ -60,12 +61,12 @@ export default (db) => {
     };
 
   const processInclude = (baseOmId, sourceFileId) =>
-    async ({ filepath, metadata }) => {
+    async ({ filepaths, metadata }) => {
       let metaId = baseOmId;
       if (!_.isEmpty(metadata)) {
-        metaId = await db.ommatidiaMetadata.add(metadata, sourceFileId, baseOmId);
+        metaId = await db.ommatidiaMetadata.add({ meta: metadata }, sourceFileId, baseOmId);
       }
-      await db.files.add(filepath, metaId);
+      await Promise.each(filepaths, filepath => db.files.add(filepath, metaId));
     };
 
   const processDirectory = async (dir, { folders, omFiles, notOmFiles, baseOm }, parentId) => {
@@ -76,12 +77,28 @@ export default (db) => {
       if (sourceFileId === undefined) return baseOmId;
       baseOmId = await db.ommatidiaMetadata.add(baseOm.omData, sourceFileId, parentId, true);
       await processOmSubjects(baseOmId, baseOm.omData.meta.subjects);
+
       await Promise.each(omFiles, processOmFile(dir, baseOmId, baseOm.include, sourceFileId));
 
       if (baseOm.include) {
+        // remove files already include via specific om files
         let filesStillToInclude = _.omit(baseOm.include, omFiles.map(om => om.relatedFile));
-        filesStillToInclude = _.map(filesStillToInclude,
-          (v, k) => ({ filepath: path.join(dir, k), metadata: v }));
+
+        filesStillToInclude = _.values(
+          _.reduce(filesStillToInclude, (result, value, key) => {
+            const uniqueKey = hash(value);
+            const filepath = path.join(dir, key);
+            if (result[uniqueKey]) {
+              result[uniqueKey].filepaths.push(filepath);
+            } else {
+              result[uniqueKey] = {
+                filepaths: [filepath],
+                metadata: value,
+              };
+            }
+            return result;
+          }, {}),
+        );
         await Promise.each(filesStillToInclude, processInclude(baseOmId, sourceFileId));
       }
     } else {
