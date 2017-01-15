@@ -1,4 +1,5 @@
 import path from 'path';
+import _ from 'lodash';
 import chalk from 'chalk';
 import { hashFile, relativeToCwd } from '../../utils';
 
@@ -55,7 +56,7 @@ export class OmmatidiaMetadata {
       parent: parentId || null,
       title: omData.meta.title,
       description: omData.description,
-      metadata: omData.meta,
+      metadata: _.omit(omData.meta, ['title', 'include', 'subjects']),
       om_base: isOmBase,
     };
     return this.ommatidia().insert(om).returning('om_id').then(res => res[0]);
