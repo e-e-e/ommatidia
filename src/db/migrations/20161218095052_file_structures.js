@@ -111,6 +111,8 @@ exports.up = (knex, Promise) => (
       WITH RECURSIVE om_compressed AS (
         SELECT
           om.om_id,
+          om.om_base,
+          om.parent,
           om.title,
           om.description,
           om.metadata,
@@ -122,6 +124,8 @@ exports.up = (knex, Promise) => (
       UNION ALL
         SELECT 
           om.om_id,
+          om.om_base,
+          om.parent,
           overrideIfNull(om.title, c.title),
           overrideIfNull(om.description, c.description),
           c.metadata || om.metadata,
@@ -133,6 +137,8 @@ exports.up = (knex, Promise) => (
       )
       SELECT 
         n.om_id,
+        n.om_base,
+        n.parent,
         n.title,
         n.description,
         n.metadata,
