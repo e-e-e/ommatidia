@@ -1,5 +1,17 @@
 import { FACETS } from '../../consts';
 
+const createOverrideIfNullFunctionWithType = type => `
+      CREATE OR REPLACE FUNCTION overrideIfNull(${type} = NULL,${type} = NULL) RETURNS ${type} AS $$
+      BEGIN
+        IF $1 IS NULL THEN
+          RETURN $2;
+        END IF;
+        RETURN $1;
+      END;
+      $$ LANGUAGE plpgsql;
+    `;
+const dropOverrideIfNullFunctionWithType = type => `DROP FUNCTION IF EXISTS overrideIfNull(${type},${type});`;
+
 const relationsOmmatidiaToTerms = (table) => {
   table.integer('om_id').unsigned();
   table.integer('term_id').unsigned();
@@ -31,6 +43,21 @@ exports.up = (knex, Promise) => (
       $$ LANGUAGE plpgsql;
     `))
   .then(() =>
+    knex.schema.raw(`
+      CREATE OR REPLACE FUNCTION getAllSubjects(int[], text) RETURNS TABLE(f1 json[]) AS $$
+      BEGIN
+        RETURN QUERY EXECUTE format('
+        SELECT ARRAY( 
+          SELECT json_build_object(''id'', t.term_id, ''term'',t.term) FROM %I s 
+          INNER JOIN terms t ON s.term_id = t.term_id AND s.om_id = ANY(''%s''::int[]) 
+        WHERE t.facet = FALSE 
+        ORDER BY t.term_id)', 'ommatidia_'||$2, $1);
+      END
+      $$ LANGUAGE plpgsql;
+    `))
+  .then(() => knex.schema.raw(createOverrideIfNullFunctionWithType('text')))
+  .then(() => knex.schema.raw(createOverrideIfNullFunctionWithType('int')))
+  .then(() =>
     Promise.all([
       knex.schema.createTable('tracked_files', (table) => {
         table.increments('tracked_id');
@@ -49,7 +76,7 @@ exports.up = (knex, Promise) => (
         table.integer('parent').unsigned();
         table.text('title');
         table.text('description');
-        table.json('metadata');
+        table.jsonb('metadata');
         table.foreign('source_file_id').references('tracked_files.tracked_id')
              .onUpdate('CASCADE')
              .onDelete('CASCADE');
@@ -78,10 +105,57 @@ exports.up = (knex, Promise) => (
     .then(() => knex.schema.raw('CREATE TRIGGER sync_lastmod BEFORE UPDATE ON files FOR EACH ROW EXECUTE PROCEDURE sync_lastmod();'))
     .then(() => knex.schema.raw('CREATE TRIGGER sync_lastmod BEFORE UPDATE ON tracked_files FOR EACH ROW EXECUTE PROCEDURE sync_lastmod();'))
     .then(() => knex.schema.raw('CREATE TRIGGER replace_parent_with_parent AFTER DELETE ON ommatidia FOR EACH ROW EXECUTE PROCEDURE replace_parent_with_parent();'))
+    .then(() => knex.schema.raw(`
+      CREATE MATERIALIZED VIEW IF NOT EXISTS om_reduced 
+      AS 
+      WITH RECURSIVE om_compressed AS (
+        SELECT
+          om.om_id,
+          om.title,
+          om.description,
+          om.metadata,
+          om.om_id AS root,
+          Array[om_id] AS ids,
+          1 AS depth
+        FROM ommatidia om
+        WHERE om.parent IS NULL
+      UNION ALL
+        SELECT 
+          om.om_id,
+          overrideIfNull(om.title, c.title),
+          overrideIfNull(om.description, c.description),
+          c.metadata || om.metadata,
+          c.root AS root,
+          c.ids || Array[om.om_id] AS ids,
+          depth + 1 AS depth
+        FROM  ommatidia om, om_compressed c
+        WHERE om.parent = c.om_id
+      )
+      SELECT 
+        n.om_id,
+        n.title,
+        n.description,
+        n.metadata,
+        n.ids,
+        n.root,
+        n.depth,
+        getAllSubjects(n.ids,'energy') as energy,
+        getAllSubjects(n.ids,'personality') as personality,
+        getAllSubjects(n.ids,'matter') as matter,
+        getAllSubjects(n.ids,'space') as space,
+        getAllSubjects(n.ids,'time') as time
+      FROM om_compressed n
+      ORDER BY n.om_id
+      WITH NO DATA;
+    `))
 );
 
 exports.down = knex => (
-  knex.schema.raw('DROP FUNCTION IF EXISTS sync_lastmod() CASCADE;')
+  knex.schema.raw('DROP MATERIALIZED VIEW IF EXISTS om_reduced')
+    .then(() => knex.schema.raw('DROP FUNCTION IF EXISTS sync_lastmod() CASCADE;'))
+    .then(() => knex.schema.raw(dropOverrideIfNullFunctionWithType('text')))
+    .then(() => knex.schema.raw(dropOverrideIfNullFunctionWithType('int')))
+    .then(() => knex.schema.raw('DROP FUNCTION IF EXISTS getAllSubjects(int[], text) CASCADE;'))
     .then(() => knex.schema.raw('DROP FUNCTION IF EXISTS replace_parent_with_parent() CASCADE;'))
     .then(() => Promise.all(FACETS.map(facet => knex.schema.dropTable(`ommatidia_${facet}`))))
     .then(() => knex.schema.dropTable('files'))
