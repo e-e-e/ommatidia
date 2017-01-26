@@ -10,7 +10,6 @@ import { loadOmmatidiaFile } from './utils';
 import { FACETS } from './consts';
 
 export default (db) => {
-
   const processFacet = async (omId, facet, subjects) => {
     if (!subjects || subjects.length === 0) return null;
     const availableSubjects = await db.thesaurus.allTermsByFacet(facet);

@@ -5,7 +5,7 @@ const chalk = require('chalk');
 const commander = require('commander');
 const argv = require('minimist')(process.argv.slice(2));
 const cliPkg = require('../package');
-const Ommatidia = require('../index.js').default;
+const Ommatidia = require('../lib/cli.js').default;
 
 
 function exit(text) {
