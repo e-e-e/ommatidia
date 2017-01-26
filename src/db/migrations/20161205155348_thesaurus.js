@@ -39,6 +39,22 @@ exports.up = (knex, Promise) => (
     }),
   ])
   .then(() => knex.raw(`
+  CREATE OR REPLACE FUNCTION term_children(int) RETURNS TABLE(f1 integer[]) AS $$
+    WITH RECURSIVE nt_children AS (
+       SELECT nt.t_id, nt.nt_id
+        FROM narrower_terms nt
+        WHERE nt.t_id = $1
+      UNION ALL
+        SELECT nt.t_id, nt.nt_id
+          FROM narrower_terms nt,
+          nt_children c
+        WHERE nt.t_id = c.nt_id
+      )
+     SELECT array_agg(s.nt_id) as children FROM (SELECT n.nt_id FROM nt_children n
+      WHERE NOT (SELECT facet FROM terms WHERE term_id = n.nt_id )) AS s
+    $$ LANGUAGE SQL;
+  `))
+  .then(() => knex.raw(`
     CREATE OR REPLACE FUNCTION baseFacetCode(ordinal int) RETURNS text
     AS $$
     DECLARE
@@ -82,6 +98,7 @@ exports.up = (knex, Promise) => (
         SELECT t.term_id, t.term, t.facet, t.bt,
           t.term_id::INT AS root, 
           1::INT AS depth, 
+          term_children(t.term_id) AS children,
           baseFacetCode(t.ordinal)::TEXT AS code
         FROM terms AS t 
         WHERE t.bt IS NULL
@@ -89,6 +106,7 @@ exports.up = (knex, Promise) => (
         SELECT t.term_id, t.term, t.facet, t.bt, 
           p.root, 
           p.depth + 1 AS depth,
+          term_children(t.term_id) AS children,
           p.code || subjectCode(t.ordinal, t.facet) AS code
         FROM root_parent AS p, terms AS t 
         WHERE t.bt = p.term_id
@@ -102,6 +120,7 @@ exports.down = knex => (
   knex.raw('DROP MATERIALIZED VIEW IF EXISTS terms_with_roots')
     .then(() => knex.raw('DROP FUNCTION baseFacetCode(int);'))
     .then(() => knex.raw('DROP FUNCTION subjectCode(int, boolean);'))
+    .then(() => knex.raw('DROP FUNCTION term_children(int);'))
     .then(() => knex.schema.dropTable('narrower_terms'))
     .then(() => knex.schema.dropTable('related_terms'))
     .then(() => knex.schema.dropTable('terms'))
