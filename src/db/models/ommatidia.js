@@ -47,7 +47,27 @@ export class OmmatidiaMetadata {
   constructor(knex) {
     this.knex = knex;
     this.ommatidia = () => knex('ommatidia');
+    this.ommatidia_reduced = () => knex('om_reduced');
     this.files = () => knex('files');
+  }
+
+  select(id) {
+    if (!id) return this.ommatidia_reduced().select();
+    return this.ommatidia_reduced().where({ om_id: id }).select();
+  }
+
+  selectAllBases() {
+    return this.ommatidia_reduced().where({ om_base: true }).select();
+  }
+
+  selectChildrenOf(id, base) {
+    const where = { parent: id };
+    if (typeof base === 'boolean') where.om_base = base;
+    return this.ommatidia_reduced().where(where).select();
+  }
+
+  refresh() {
+    return this.knex.raw('REFRESH MATERIALIZED VIEW om_reduced WITH DATA');
   }
 
   add(omData, srcFileId, parentId, isOmBase = false) {
@@ -71,18 +91,18 @@ export class OmmatidiaMetadata {
 
   get = id => this.ommatidia().where({ om_id: id }).select();
 
-  getFull = id => this.knex.raw(`
-    WITH RECURSIVE all_metadata(metadata, description, parent, om_id, depth) AS (
-        SELECT o.metadata, o.description, o.parent, o.om_id, 1 
-        FROM ommatidia o 
-        WHERE o.om_id = ?
-      UNION ALL
-        SELECT o.metadata, o.description, o.parent, o.om_id, depth+1
-        FROM ommatidia o, all_metadata am
-        WHERE o.om_id = am.parent
-    )
-    SELECT * FROM all_metadata ORDER BY depth DESC;
-  `, [id]);
+  // getFull = id => this.knex.raw(`
+  //   WITH RECURSIVE all_metadata(metadata, description, parent, om_id, depth) AS (
+  //       SELECT o.metadata, o.description, o.parent, o.om_id, 1
+  //       FROM ommatidia o
+  //       WHERE o.om_id = ?
+  //     UNION ALL
+  //       SELECT o.metadata, o.description, o.parent, o.om_id, depth+1
+  //       FROM ommatidia o, all_metadata am
+  //       WHERE o.om_id = am.parent
+  //   )
+  //   SELECT * FROM all_metadata ORDER BY depth DESC;
+  // `, [id]);
 
   delete = id => this.ommatidia().where({ om_id: id }).del();
 
