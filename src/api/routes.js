@@ -1,8 +1,8 @@
 import express from 'express';
-import Promise from 'bluebird';
+// import Promise from 'bluebird';
 import Thesaurus from '../db/models/thesaurus';
 import { OmmatidiaMetadata, Files, TrackedFiles } from '../db/models/ommatidia';
-import { FACETS } from '../consts';
+// import { FACETS } from '../consts';
 
 const handleErrors = res => (err) => {
   console.log(err);
@@ -20,18 +20,25 @@ export default (knex) => {
     files: new Files(knex),
   };
 
-  db.ommatidiaMetadata.refresh();
+  db.ommatidiaMetadata.refresh().then(console.log).catch(console.error);
 
   router.get('/subjects', (req, res) => {
-    const promises = FACETS.map(facet => db.thesaurus.allTermsByFacet(facet));
-    Promise.all(promises)
+    db.thesaurus.allTerms()
       .then(sendJson(res))
       .catch(handleErrors(res));
   });
 
   router.get('/ommatidia', (req, res) => {
     const { id } = req.query;
-    db.ommatidiaMetadata.select(id)
+    console.log('OM:', req.query);
+    const promise = id === undefined
+      ? db.ommatidiaMetadata.selectRoots()
+      : db.ommatidiaMetadata.select(id);
+    promise
+      .map(om => (
+        db.ommatidiaMetadata.selectChildrenOf(om.om_id)
+          .then(children => ({ ...om, children }))
+      ))
       .then(sendJson(res))
       .catch(handleErrors(res));
   });
