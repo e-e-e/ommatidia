@@ -24,6 +24,12 @@ export default class Thesaurus {
       .select('term_id'),
     )
 
+  allTerms = _.memoize(() =>
+    this.TermsWithRoots()
+      .orderBy('term_id')
+      .select('term_id', 'term', 'notes', 'bt', 'facet', 'code'),
+    )
+
   allTermsByFacet = _.memoize(facet =>
     this.TermsWithRoots()
       .where('root', 'in', this.facetId(facet))
