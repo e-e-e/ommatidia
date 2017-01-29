@@ -56,6 +56,10 @@ export class OmmatidiaMetadata {
     return this.ommatidia_reduced().where({ om_id: id }).select();
   }
 
+  selectRoots() {
+    return this.ommatidia_reduced().where({ parent: null, om_base: true }).select();
+  }
+
   selectAllBases() {
     return this.ommatidia_reduced().where({ om_base: true }).select();
   }
@@ -67,7 +71,7 @@ export class OmmatidiaMetadata {
   }
 
   refresh() {
-    return this.knex.raw('REFRESH MATERIALIZED VIEW om_reduced WITH DATA');
+    return this.knex.raw('REFRESH MATERIALIZED VIEW om_reduced WITH DATA;');
   }
 
   add(omData, srcFileId, parentId, isOmBase = false) {
