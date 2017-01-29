@@ -4,7 +4,7 @@ import Promise from 'bluebird';
 import yaml from 'js-yaml';
 import _ from 'lodash';
 
-const isFacet = name => /\(.+\)/.test(name);
+const isFacet = name => /^\(.+\)/.test(name);
 
 export default class Thesaurus {
   constructor(knex) {
