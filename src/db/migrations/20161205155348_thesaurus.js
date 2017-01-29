@@ -95,7 +95,11 @@ exports.up = (knex, Promise) => (
     CREATE MATERIALIZED VIEW IF NOT EXISTS terms_with_roots 
     AS
       WITH RECURSIVE root_parent AS (
-        SELECT t.term_id, t.term, t.facet, t.bt,
+        SELECT t.term_id, 
+          t.term, 
+          t.notes,
+          t.facet, 
+          t.bt,
           t.term_id::INT AS root, 
           1::INT AS depth, 
           term_children(t.term_id) AS children,
@@ -103,7 +107,11 @@ exports.up = (knex, Promise) => (
         FROM terms AS t 
         WHERE t.bt IS NULL
       UNION ALL
-        SELECT t.term_id, t.term, t.facet, t.bt, 
+        SELECT t.term_id, 
+          t.term,
+          t.notes,
+          t.facet,
+          t.bt, 
           p.root, 
           p.depth + 1 AS depth,
           term_children(t.term_id) AS children,
