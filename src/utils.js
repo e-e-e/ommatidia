@@ -2,7 +2,12 @@ import fs from 'fs';
 import path from 'path';
 import crypto from 'crypto';
 import yaml from 'js-yaml';
+import mmm from 'mmmagic';
+import mime from 'mime-types';
 import Promise from 'bluebird';
+
+const magic = new mmm.Magic(mmm.MAGIC_MIME_TYPE);
+const detectFile = Promise.promisify(magic.detectFile, { context: magic });
 
 export const relativeToCwd = filepath => path.relative(process.cwd(), filepath);
 
@@ -28,6 +33,13 @@ export function hashFile(file) {
     stream.on('error', reject);
   });
   return promise;
+}
+
+export function mimetype(file) {
+  return detectFile(file).catch((err) => {
+    console.warn(err);
+    return mime.lookup(file);
+  });
 }
 
 export function loadOmmatidiaFile(filename) {

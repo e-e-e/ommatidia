@@ -94,6 +94,7 @@ exports.up = (knex, Promise) => (
         table.string('original_name').notNullable();
         table.text('original_path').notNullable();
         table.string('md5', 32).unique().notNullable();
+        table.string('mimetype');
         table.timestamp('created_at').defaultTo(knex.fn.now());
         table.timestamp('modified_at').defaultTo(knex.fn.now());
         table.foreign('related_om').references('ommatidia.om_id')

@@ -1,7 +1,7 @@
 import path from 'path';
 import _ from 'lodash';
 import chalk from 'chalk';
-import { hashFile, relativeToCwd } from '../../utils';
+import { hashFile, mimetype, relativeToCwd } from '../../utils';
 
 export class TrackedFiles {
   constructor(knex) {
@@ -121,6 +121,7 @@ export class Files {
   static async mapData(src, omId) {
     return {
       md5: await hashFile(src),
+      mimetype: await mimetype(src),
       original_name: path.basename(src),
       original_path: path.dirname(src),
       related_om: omId,
