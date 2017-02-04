@@ -3,6 +3,8 @@ import _ from 'lodash';
 import chalk from 'chalk';
 import { hashFile, mimetype, relativeToCwd } from '../../utils';
 
+const makeArrayIfNot = v => ((Array.isArray(v)) ? v : [v]);
+
 export class TrackedFiles {
   constructor(knex) {
     this.trackedFiles = () => knex('tracked_files');
@@ -116,6 +118,10 @@ export class OmmatidiaMetadata {
 export class Files {
   constructor(knex) {
     this.files = () => knex('files');
+  }
+
+  async select(ids) {
+    return this.files().select().where('related_om', makeArrayIfNot(ids));
   }
 
   static async mapData(src, omId) {
