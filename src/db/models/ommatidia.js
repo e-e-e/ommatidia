@@ -121,7 +121,7 @@ export class Files {
   }
 
   async select(ids) {
-    return this.files().select().where('related_om', makeArrayIfNot(ids));
+    return this.files().select().whereIn('related_om', makeArrayIfNot(ids));
   }
 
   static async mapData(src, omId) {
