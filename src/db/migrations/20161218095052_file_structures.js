@@ -128,7 +128,7 @@ exports.up = (knex, Promise) => (
           om.om_base,
           om.parent,
           overrideIfNull(om.title, c.title),
-          overrideIfNull(om.description, c.description),
+          om.description,
           c.metadata || om.metadata,
           c.root AS root,
           c.ids || Array[om.om_id] AS ids,
