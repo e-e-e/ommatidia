@@ -16,7 +16,7 @@ export const isOmmatidiaFile = filename => /^\*.*\.om$/.test(filename);
 export const isBaseOmmatidiaFile = filename => (isOmmatidiaFile(filename) && filename.length === 4);
 
 export const relatedOmmatidiaFile = (filename) => {
-  const match = filename.match(/^\*(.*)\.om$/);
+  const match = filename.match(/^\*\.(.*)\.om$/);
   return (match && match.length > 1) ? match[1] : null;
 };
 

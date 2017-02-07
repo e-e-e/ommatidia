@@ -58,8 +58,8 @@ const sortFilesIntoKind = ({ folders, omFiles, notOmFiles, baseOm }, file, index
       if (files.find(f => f.name === relatedFile)) {
         omFiles.push({ relatedFile, omFile: file.name });
       } else {
-        console.log(chalk.orange('.om file does not match any file in directory:'));
-        console.log(file.name);
+        console.log(chalk.yellow('.om file does not match any file in directory:'));
+        console.log(file.name, relatedFile);
       }
     }
   } else if (file.stat.isFile()) {
