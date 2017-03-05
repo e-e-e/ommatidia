@@ -90,7 +90,7 @@ export class OmmatidiaMetadata {
   }
 
   addSubjects(omId, facet, subjects) {
-    const data = subjects.map(subject => ({ om_id: omId, term_id: subject.term_id }));
+    const data = subjects.map((subject, index) => ({ om_id: omId, term_id: subject.term_id, ordinal: index }));
     return this.knex(`ommatidia_${facet.toLowerCase()}`).insert(data);
   }
 
