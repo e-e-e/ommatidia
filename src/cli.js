@@ -11,6 +11,7 @@ import { OmmatidiaMetadata, Files, TrackedFiles } from './db/models/ommatidia';
 import { generateOmFilename, isOmmatidiaFile } from './utils';
 import walk from './walk';
 import processOmDirectory from './process';
+import transferFiles from './transfer';
 
 const fsStat = Promise.promisify(fs.stat);
 const fsReadFile = Promise.promisify(fs.readFile);
@@ -106,7 +107,14 @@ export default class Ommatidia {
 
   build(options) {
     console.log(options);
-    return walk(this.baseDir, processOmDirectory(this.db));
+    console.log('Is this a DRYRUN:', options.dryRun);
+    return walk(this.baseDir, processOmDirectory(this.db))
+      .then(() => this.db.ommatidiaMetadata.refresh())
+      .then(() => transferFiles(this.db.files));
+  }
+
+  propagate() {
+    return transferFiles(this.db.files);
   }
 
 }

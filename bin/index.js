@@ -88,6 +88,18 @@ function invoke(env) {
         .catch(exit);
     });
 
+  commander.command('propagate')
+    .description('Propagate changes flagged in build and files structure using ommatidia config file.')
+    .option('-v, --verbose')
+    .option('-n, --dry-run', 'Shows files that would be effected.')
+    .option('-f, --force', 'Force rebuild of ommatidia data, if database already built.')
+    .action((options) => {
+      pending = initOmmatidia(env)
+        .propagate(options)
+        .then(() => success('Successfully propagated ommatidia directory!'))
+        .catch(exit);
+    });
+
   commander.command('update')
     .description('Update Ommatidia database using ommatidia config file.')
     .option('-v, --verbose')
