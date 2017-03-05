@@ -53,7 +53,7 @@ export function loadOmmatidiaFile(filename) {
     if (typeof description === 'string') description = description.trim();
     return { include: meta.include, meta, description };
   } catch (e) {
-    console.warn('unable to load Om file:', filename);
+    console.warn('Unable to load Om file:', filename);
     console.warn(e, e.stack);
     return null;
   }
