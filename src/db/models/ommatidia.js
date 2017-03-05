@@ -1,8 +1,9 @@
 import path from 'path';
 import _ from 'lodash';
+import Promise from 'bluebird';
 import chalk from 'chalk';
 import { hashFile, mimetype, relativeToCwd } from '../../utils';
-
+import { FACETS } from '../../consts/index';
 const makeArrayIfNot = v => ((Array.isArray(v)) ? v : [v]);
 
 export class TrackedFiles {
@@ -116,14 +117,62 @@ export class OmmatidiaMetadata {
   relatedFiles = id => this.files().select().where({ related_om: id })
 }
 
+function reduceSubjectCodes(codes) {
+  const uniqueCodes = new Set(codes.sort((a, b) => {
+    if (a.ordinal < b.ordinal) return -1;
+    else if (a.ordinal > b.ordinal) return 1;
+    return 0;
+  }).map(v => v.code));
+  let str = '';
+  for (const v of uniqueCodes) {
+    if (str.length + v.length > 50) {
+      break;
+    }
+    str += v;
+  }
+  return str;
+}
+
 export class Files {
   constructor(knex) {
+    this.knex = knex;
     this.files = () => knex('files');
   }
 
-  async select(ids) {
-    return this.files().select().whereIn('related_om', makeArrayIfNot(ids));
-  }
+  select = async ids => this.files().select().whereIn('related_om', makeArrayIfNot(ids));
+
+  selectDirty = async () => this.files().select()
+    .whereNull('path')
+    .orWhereNull('name')
+    .orWhere('updated', true);
+
+  facetedPath = async omId => (
+    Promise.map(FACETS, (facet) => {
+      const table = `ommatidia_${facet}`;
+      return this.knex(table)
+        .join(
+          this.knex.raw(`
+            terms_with_roots t 
+            ON :table:.term_id = t.term_id
+            AND :table:.om_id IN (
+              SELECT unnest(ids)
+              FROM om_reduced WHERE om_id = :omId
+            )`, {
+              omId,
+              table,
+            }))
+        .orderBy(`${table}.ordinal`)
+        .select('t.code', 'ordinal')
+        .then(reduceSubjectCodes);
+    })
+    .then((codes) => {
+      const faceted = codes.join('');
+      if (faceted.length > 0 && faceted.charAt(0) === ',') {
+        return faceted.substr(1);
+      }
+      return faceted;
+    })
+  )
 
   static async mapData(src, omId) {
     return {
