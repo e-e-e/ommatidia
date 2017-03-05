@@ -20,8 +20,9 @@ export class TrackedFiles {
   }
 
   async add(filepath) {
-    const file = await TrackedFiles.mapData(filepath);
-    console.log(chalk.gray(chalk.bold('Tracking file:'), relativeToCwd(filepath)));
+    const relativeFilePath = relativeToCwd(filepath);
+    const file = await TrackedFiles.mapData(relativeFilePath);
+    console.log(chalk.gray(chalk.bold('Tracking file:'), relativeFilePath));
     return this.trackedFiles()
       .insert(file)
       .returning('tracked_id')
@@ -135,8 +136,9 @@ export class Files {
   }
 
   async add(filepath, omId) {
-    const file = await Files.mapData(filepath, omId);
-    console.log(chalk.gray(chalk.bold('Adding file:'), relativeToCwd(filepath)));
+    const relativeFilePath = relativeToCwd(filepath);
+    const file = await Files.mapData(relativeFilePath, omId);
+    console.log(chalk.gray(chalk.bold('Adding file:'), relativeFilePath));
     return this.files()
       .insert(file)
       .returning('file_id')
