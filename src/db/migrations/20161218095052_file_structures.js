@@ -15,6 +15,7 @@ const dropOverrideIfNullFunctionWithType = type => `DROP FUNCTION IF EXISTS over
 const relationsOmmatidiaToTerms = (table) => {
   table.integer('om_id').unsigned();
   table.integer('term_id').unsigned();
+  table.integer('ordinal').unsigned();
   table.foreign('om_id').references('ommatidia.om_id')
        .onUpdate('CASCADE')
        .onDelete('CASCADE');
@@ -48,10 +49,12 @@ exports.up = (knex, Promise) => (
       BEGIN
         RETURN QUERY EXECUTE format('
         SELECT ARRAY( 
-          SELECT json_build_object(''id'', t.term_id, ''term'',t.term) FROM %I s 
-          INNER JOIN terms t ON s.term_id = t.term_id AND s.om_id = ANY(''%s''::int[]) 
-        WHERE t.facet = FALSE 
-        ORDER BY t.term_id)', 'ommatidia_'||$2, $1);
+          SELECT json_build_object(''id'', t.term_id, ''term'', t.term, ''ordinal'', s.ordinal) 
+            FROM %I s 
+            INNER JOIN terms t ON s.term_id = t.term_id AND s.om_id = ANY(''%s''::int[]) 
+          WHERE t.facet = FALSE 
+          ORDER BY t.term_id
+        )', 'ommatidia_'||$2, $1);
       END
       $$ LANGUAGE plpgsql;
     `))
