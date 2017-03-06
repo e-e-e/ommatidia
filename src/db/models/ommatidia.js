@@ -174,6 +174,11 @@ export class Files {
     })
   )
 
+  updateFilepath = async (id, filepath, filename) =>
+    this.files()
+      .update({ path: filepath, name: filename })
+      .where('file_id', id);
+
   static async mapData(src, omId) {
     return {
       md5: await hashFile(src),
