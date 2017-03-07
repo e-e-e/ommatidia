@@ -2,8 +2,10 @@ import path from 'path';
 import _ from 'lodash';
 import Promise from 'bluebird';
 import chalk from 'chalk';
-import { hashFile, mimetype, relativeToCwd } from '../../utils';
+import mimetype from '../../utils/mimetype';
+import { relativeToCwd, hashFile } from '../../utils/filesystem';
 import { FACETS } from '../../consts/index';
+
 const makeArrayIfNot = v => ((Array.isArray(v)) ? v : [v]);
 
 export class TrackedFiles {

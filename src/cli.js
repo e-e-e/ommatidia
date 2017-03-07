@@ -8,7 +8,7 @@ import chalk from 'chalk';
 import Knex from 'knex';
 import Thesaurus from './db/models/thesaurus';
 import { OmmatidiaMetadata, Files, TrackedFiles } from './db/models/ommatidia';
-import { generateOmFilename, isOmmatidiaFile } from './utils';
+import { generateOmFilename, isOmmatidiaFile } from './utils/omFileHelpers';
 import walk from './walk';
 import processOmDirectory from './process';
 import transferFiles from './transfer';

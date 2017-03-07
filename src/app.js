@@ -1,13 +1,13 @@
-import path from 'path';
 import express from 'express';
 import bodyParser from 'body-parser';
 import Knex from 'knex';
 import api from './api/routes'; // eslint-disable-line
+import { relativeToCwd } from './utils/filesystem';
 
 export default (options) => {
   const port = options.port || 3000;
   const apiPath = options.apiPath || '/api';
-  const staticPath = path.resolve(process.cwd(), options.public || './');
+  const staticPath = relativeToCwd(options.public || './');
   const app = express();
 
   const knex = Knex({

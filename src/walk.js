@@ -10,7 +10,7 @@ import {
   isBaseOmmatidiaFile,
   relatedOmmatidiaFile,
   loadOmmatidiaFile,
-} from './utils';
+} from './utils/omFileHelpers';
 
 const readdir = Promise.promisify(fs.readdir);
 const stat = Promise.promisify(fs.stat);

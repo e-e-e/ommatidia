@@ -5,7 +5,7 @@ import _ from 'lodash';
 import hash from 'object-hash';
 import chalk from 'chalk';
 
-import { loadOmmatidiaFile } from './utils';
+import { loadOmmatidiaFile } from './utils/omFileHelpers';
 
 import { FACETS } from './consts';
 
