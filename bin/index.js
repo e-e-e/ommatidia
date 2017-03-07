@@ -1,4 +1,6 @@
 #!/usr/bin/env node
+const path = require('path');
+
 const Promise = require('bluebird');
 const Liftoff = require('liftoff');
 const chalk = require('chalk');
@@ -6,7 +8,7 @@ const commander = require('commander');
 const argv = require('minimist')(process.argv.slice(2));
 const cliPkg = require('../package');
 const Ommatidia = require('../lib/cli.js').default;
-
+const transcoder = require('../lib/transcoders/images.js').default;
 
 function exit(text) {
   if (text instanceof Error) {
@@ -129,10 +131,22 @@ function invoke(env) {
         .catch(exit);
     });
 
+  commander.command('transcode <from> <to>')
+    .description('test transcoder')
+    .action((from, to) => {
+      console.log(from, to);
+      const fromPath = path.resolve(process.cwd(), from);
+      const toPath = path.resolve(process.cwd(), to);
+      pending = transcoder(fromPath, toPath)
+        .then(console.log)
+        .then(() => success('success'))
+        .catch(exit);
+    });
+
   commander.parse(process.argv);
 
   Promise.resolve(pending)
-    .then(() => commander.help());
+     .then(() => commander.help());
 }
 
 const cli = new Liftoff({

@@ -40,6 +40,7 @@ export default class Ommatidia {
       files: new Files(this.knex),
     };
     this.baseDir = process.cwd();
+    this.destination = config.destination;
   }
 
   static makeOmFile = (file) => {
@@ -110,11 +111,11 @@ export default class Ommatidia {
     console.log('Is this a DRYRUN:', options.dryRun);
     return walk(this.baseDir, processOmDirectory(this.db))
       .then(() => this.db.ommatidiaMetadata.refresh())
-      .then(() => transferFiles(this.db.files));
+      .then(() => transferFiles(this.db.files, this.destination));
   }
 
   propagate() {
-    return transferFiles(this.db.files);
+    return transferFiles(this.db.files, this.destination);
   }
 
 }
