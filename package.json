@@ -35,7 +35,8 @@
     "minimist": "^1.2.0",
     "mmmagic": "^0.4.5",
     "object-hash": "^1.1.5",
-    "pg": "^6.1.0"
+    "pg": "^6.1.0",
+    "stream-to-promise": "^2.2.0"
   },
   "devDependencies": {
     "babel-cli": "^6.18.0",
